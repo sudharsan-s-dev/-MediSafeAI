@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Module 2: Medication Safety & Interaction Checks - MediSafe AI{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="bi bi-shield-check text-success me-2"></i>Medication Safety & Risk Screening</h2>
+                <p class="text-muted mb-0">Screens medicines against <strong>drug-drug interactions</strong>, <strong>declared allergies</strong>, <strong>duplicate ingredients</strong>, and <strong>elderly dose thresholds</strong>.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-secondary p-2"><i class="bi bi-person-circle me-1"></i> Patient: Ramaswamy K. (Age 72)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scenario Presets Bar -->
+<div class="card mb-4 bg-light border-0 shadow-sm">
+    <div class="card-body py-2 px-3">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="fw-semibold text-secondary small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Load High-Risk Cases:</span>
+            <button class="btn btn-sm btn-outline-danger" onclick="loadSafetyScenario('triple_whammy')">
+                <i class="bi bi-activity me-1"></i>Case 1: "Triple Whammy" (Kidney Risk)
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="loadSafetyScenario('bleeding')">
+                <i class="bi bi-droplet-half me-1"></i>Case 2: Major Bleeding Risk
+            </button>
+            <button class="btn btn-sm btn-outline-warning" onclick="loadSafetyScenario('allergy')">
+                <i class="bi bi-bandaid me-1"></i>Case 3: Penicillin Allergy Conflict
+            </button>
+            <button class="btn btn-sm btn-outline-primary" onclick="loadSafetyScenario('dose_limit')">
+                <i class="bi bi-capsule me-1"></i>Case 4: Excessive Paracetamol Dose
+            </button>
+            <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearSafetyInputs()">
+                <i class="bi bi-eraser me-1"></i>Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Safety Input Form -->
+<form id="safetyForm" method="POST" action="/safety">
+    <div class="row g-4 mb-4">
+        <!-- Medicines to Check -->
+        <div class="col-md-8">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-capsule-pill text-primary me-2"></i>Active Medication Regimen</h5>
+                        <small class="text-muted">Enter current medications to screen (one per line)</small>
+                    </div>
+                    <span class="badge bg-primary">Active Regimen</span>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" id="medicines_input" name="medicines_input" rows="8" placeholder="e.g.&#10;Tab Telma 40mg 1-0-0&#10;Tab Lasix 40mg 1-0-0&#10;Tab Brufen 400mg 1-0-1&#10;Tab Glycomet 500mg 1-0-1" required>{{ medicines_text or '' }}</textarea>
+                    <div class="form-text small">Enter commercial brands or generic names. Constituent ingredients of combination medicines will be automatically screened.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Context (Allergies & Age) -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-warning">
+                <div class="card-header bg-warning bg-opacity-10 py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-person-lines-fill text-warning me-2"></i>Patient Profile</h5>
+                        <small class="text-muted">Personalized safety parameters</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="patient_age" class="form-label fw-semibold">Patient Age (Years):</label>
+                        <input type="number" class="form-control" id="patient_age" name="patient_age" value="{{ patient_age or 72 }}" min="18" max="110">
+                        <div class="form-text small">Age >= 65 enables Beers criteria geriatric dose thresholds.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="allergies_input" class="form-label fw-semibold text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Declared Allergies:</label>
+                        <input type="text" class="form-control border-danger" id="allergies_input" name="allergies_input" value="{{ allergies_text or 'Penicillin, Sulfa' }}" placeholder="e.g. Penicillin, Aspirin, Sulfa">
+                        <div class="form-text small">Separate multiple allergies with commas. Screens brand names, active ingredients, and drug classes.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mb-5">
+        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm fw-bold">
+            <i class="bi bi-shield-check me-2"></i>Run Comprehensive Safety Check
+        </button>
+    </div>
+</form>
+
+{% if result %}
+<!-- SAFETY RESULTS SECTION -->
+<div class="card shadow mb-4" id="results">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-clipboard2-pulse-fill text-success me-2"></i>Safety Evaluation Report</h4>
+            <small class="text-muted">Screened {{ result.summary.total_medications }} medicines for Patient Age {{ result.patient_info.age }}</small>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-secondary me-2" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i>Print Report
+            </button>
+            <span class="badge bg-{{ result.summary.status_badge }} px-3 py-2 fs-6">
+                {{ result.summary.status_label }}
+            </span>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <!-- Metric Summary Cards -->
+        <div class="row g-3 mb-4 text-center">
+            <div class="col">
+                <div class="card bg-light border-0 p-2">
+                    <span class="text-muted small">Medicines Screened</span>
+                    <h3 class="fw-bold text-dark mb-0">{{ result.summary.total_medications }}</h3>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card p-2 border-0 badge-discontinued">
+                    <span class="small fw-semibold text-danger">High Severity Alerts</span>
+                    <h3 class="fw-bold text-danger mb-0">{{ result.summary.high_severity_count }}</h3>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card p-2 border-0 badge-changed">
+                    <span class="small fw-semibold text-warning">Moderate Warnings</span>
+                    <h3 class="fw-bold text-dark mb-0">{{ result.summary.moderate_severity_count }}</h3>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card p-2 border-0 badge-new">
+                    <span class="small fw-semibold text-info">Low / Absorption Notes</span>
+                    <h3 class="fw-bold text-dark mb-0">{{ result.summary.low_severity_count }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. ALLERGY CONFLICT ALERTS -->
+        {% if result.alerts.allergies %}
+        <div class="mb-4">
+            <h5 class="fw-bold text-danger mb-3"><i class="bi bi-slash-circle-fill me-2"></i>Critical Allergy Conflicts ({{ result.alerts.allergies|length }})</h5>
+            {% for a in result.alerts.allergies %}
+            <div class="alert alert-danger border-danger shadow-sm mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="alert-heading fw-bold mb-1"><i class="bi bi-exclamation-octagon-fill me-2"></i>{{ a.medicine_name }}</h5>
+                        <div class="badge bg-danger mb-2">Declared Allergy: {{ a.declared_allergy }} ({{ a.reason }})</div>
+                        <p class="mb-2 fw-semibold text-dark">{{ a.patient_warning }}</p>
+                        <small class="text-muted d-block"><strong>Clinical Recommendation:</strong> {{ a.clinical_recommendation }}</small>
+                    </div>
+                    <span class="badge bg-danger fs-6 px-3 py-2">CONTRAINDICATED</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- 2. GERIATRIC DOSE & DUPLICATE WARNINGS -->
+        {% if result.alerts.geriatric_dose_limits or result.alerts.duplicate_ingredients %}
+        <div class="mb-4">
+            <h5 class="fw-bold text-warning-emphasis mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Elderly Dosage & Duplicate Ingredient Alerts</h5>
+            {% for d in result.alerts.geriatric_dose_limits %}
+            <div class="alert alert-warning border-warning shadow-sm mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="alert-heading fw-bold mb-1"><i class="bi bi-speedometer2 me-2"></i>{{ d.ingredient }} — Excessive Daily Intake</h5>
+                        <div class="mb-2">
+                            <span class="badge bg-danger">Calculated: {{ d.calculated_daily_dose }}</span>
+                            <span class="badge bg-secondary">Safe Elderly Limit: {{ d.max_recommended_dose }}</span>
+                        </div>
+                        <p class="mb-2 fw-medium text-dark">{{ d.patient_warning }}</p>
+                        <small class="text-muted d-block"><strong>Medicines Contributing:</strong> {{ d.medicines_involved|join(', ') }}</small>
+                        <small class="text-muted d-block"><strong>Clinical Recommendation:</strong> {{ d.clinical_recommendation }}</small>
+                    </div>
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">DOSE EXCEEDED</span>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% for dup in result.alerts.duplicate_ingredients %}
+            <div class="alert alert-warning border-warning shadow-sm mb-3">
+                <h5 class="alert-heading fw-bold mb-1"><i class="bi bi-layers-fill me-2"></i>Duplicate Active Ingredient: {{ dup.ingredient }}</h5>
+                <p class="mb-1 fw-medium text-dark">{{ dup.warning }}</p>
+                <small class="text-muted"><strong>Prescribed as:</strong> {{ dup.medicines|join(' and ') }}</small>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- 3. DRUG-DRUG INTERACTIONS -->
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-arrow-left-right me-2"></i>Drug-Drug Interactions ({{ result.alerts.drug_interactions|length }})</h5>
+            {% if result.alerts.drug_interactions %}
+                {% for ddi in result.alerts.drug_interactions %}
+                <div class="card mb-3 border-{{ 'danger' if ddi.severity == 'HIGH' else ('warning' if ddi.severity == 'MODERATE' else 'info') }} shadow-sm">
+                    <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="fw-bold fs-6">
+                            <i class="bi bi-capsule me-1 text-primary"></i>{{ ddi.drug_1 }}
+                            <span class="text-muted mx-2">+</span>
+                            <i class="bi bi-capsule me-1 text-primary"></i>{{ ddi.drug_2 }}
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary me-2">{{ ddi.category }}</span>
+                            <span class="badge bg-{{ 'danger' if ddi.severity == 'HIGH' else ('warning text-dark' if ddi.severity == 'MODERATE' else 'info text-dark') }} px-3 py-1">
+                                {{ ddi.severity }} SEVERITY
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body py-3">
+                        <p class="fw-semibold text-dark mb-2">
+                            <i class="bi bi-info-circle-fill text-{{ 'danger' if ddi.severity == 'HIGH' else 'warning' }} me-2"></i>{{ ddi.patient_warning }}
+                        </p>
+                        <div class="bg-light p-2 rounded small text-muted mb-1">
+                            <strong>Clinical Mechanism:</strong> {{ ddi.mechanism }}
+                        </div>
+                        <div class="small text-muted">
+                            <strong>Physician Action:</strong> {{ ddi.clinical_recommendation }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-success d-flex align-items-center" role="alert">
+                    <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+                    <div>
+                        <strong>No Known Dangerous Interactions:</strong> No interacting pairs from the curated reference set were identified among these medicines.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-4 p-3 bg-light rounded d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="fw-bold text-dark"><i class="bi bi-calendar2-check text-primary me-1"></i>Next Checkpoint: Daily Pillbox Timetable & Reminders</span>
+                <p class="small text-muted mb-0">Generate meal-based daily dosage slots (Morning, Afternoon, Evening, Night) and enable browser reminder notifications.</p>
+            </div>
+            <form method="POST" action="/schedule">
+                <input type="hidden" name="medicines_input" value="{{ medicines_text }}">
+                <button type="submit" class="btn btn-primary fw-semibold">
+                    <i class="bi bi-arrow-right-circle me-1"></i>Proceed to Module 3: Scheduler
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const safetyScenarios = {
+    triple_whammy: {
+        medicines: "Tab Telma 40mg 1-0-0\nTab Lasix 40mg 1-0-0\nTab Brufen 400mg 1-0-1\nTab Glycomet 500mg 1-0-1",
+        allergies: "None",
+        age: 74
+    },
+    bleeding: {
+        medicines: "Tab Ecosprin 75mg 0-0-1 after food\nTab Warfdac 2mg 0-0-1\nTab Clopilet 75mg 1-0-0",
+        allergies: "None",
+        age: 71
+    },
+    allergy: {
+        medicines: "Tab Augmentin 625mg 1-0-1\nTab Pantocid 40mg 1-0-0\nTab Dolo 650mg SOS",
+        allergies: "Penicillin, Sulfa drugs",
+        age: 69
+    },
+    dose_limit: {
+        medicines: "Tab Dolo 650mg 1-1-1 (morning, noon, night)\nTab Crocin 500mg 1-1-1\nTab Telma 40mg 1-0-0",
+        allergies: "None",
+        age: 72
+    }
+};
+
+function loadSafetyScenario(key) {
+    if (safetyScenarios[key]) {
+        document.getElementById('medicines_input').value = safetyScenarios[key].medicines;
+        document.getElementById('allergies_input').value = safetyScenarios[key].allergies;
+        document.getElementById('patient_age').value = safetyScenarios[key].age;
+    }
+}
+
+function clearSafetyInputs() {
+    document.getElementById('medicines_input').value = '';
+    document.getElementById('allergies_input').value = '';
+}
+
+// Scroll down to results if present
+window.addEventListener('DOMContentLoaded', () => {
+    const results = document.getElementById('results');
+    if (results) {
+        results.scrollIntoView({ behavior: 'smooth' });
+    }
+});
+</script>
+{% endblock %}

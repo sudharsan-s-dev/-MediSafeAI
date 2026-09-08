@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Module 3: Medication Scheduler & Reminders - MediSafe AI{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="bi bi-calendar2-check text-primary me-2"></i>Daily Medication Timetable & Adherence</h2>
+                <p class="text-muted mb-0">Meal-based pillbox schedule, acute vs. chronic course tracking, and desktop reminder alerts for elderly patients.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-secondary p-2"><i class="bi bi-person-circle me-1"></i> Patient: Ramaswamy K. (Age 72)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scenario Presets & Reminder Controls Bar -->
+<div class="card mb-4 bg-light border-0 shadow-sm">
+    <div class="card-body py-2 px-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <span class="fw-semibold text-secondary small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Load Regimen:</span>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadScheduleScenario('geriatric_mixed')">
+                    <i class="bi bi-capsule me-1"></i>Case 1: Mixed Chronic & 5-Day Antibiotic
+                </button>
+                <button class="btn btn-sm btn-outline-success" onclick="loadScheduleScenario('cardiac_chronic')">
+                    <i class="bi bi-heart-pulse me-1"></i>Case 2: Cardiac & Diabetic Maintenance
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearScheduleInputs()">
+                    <i class="bi bi-eraser me-1"></i>Clear
+                </button>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-dark" id="btnNotification" onclick="enableBrowserNotifications()">
+                    <i class="bi bi-bell-fill text-warning me-1"></i>Enable Reminders
+                </button>
+                <button class="btn btn-sm btn-primary" onclick="triggerTestReminder()">
+                    <i class="bi bi-volume-up-fill me-1"></i>Simulate Morning Reminder
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Input Form (Collapsible if already generated) -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-pencil-square text-primary me-2"></i>Configure Medication Schedule</h5>
+        <button class="btn btn-sm btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#configCollapse">
+            Toggle Input
+        </button>
+    </div>
+    <div class="collapse {{ 'show' if not timetable else '' }}" id="configCollapse">
+        <div class="card-body">
+            <form id="scheduleForm" method="POST" action="/schedule">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label for="target_date" class="form-label fw-semibold">Target Date:</label>
+                        <input type="date" class="form-control" id="target_date" name="target_date" value="{{ target_date or current_date_str }}">
+                    </div>
+                    <div class="col-md-8">
+                        <label for="medicines_input" class="form-label fw-semibold">Prescription Items (with frequency & duration):</label>
+                        <textarea class="form-control" id="medicines_input" name="medicines_input" rows="5" placeholder="e.g.&#10;Tab Telma 40mg 1-0-0 (morning)&#10;Tab Glycomet 500mg 1-0-1 after food&#10;Tab Augmentin 625mg 1-0-1 for 5 days&#10;Tab Atorva 10mg 0-0-1 night&#10;Tab Dolo 650mg SOS" required>{{ medicines_text or '' }}</textarea>
+                        <div class="form-text small">Our engine automatically classifies chronic maintenance vs. fixed courses (e.g. 'for 5 days').</div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">
+                        <i class="bi bi-calendar2-range-fill me-1"></i>Generate Daily Timetable
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if timetable %}
+<!-- ADHERENCE SUMMARY PROGRESS BAR -->
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-body py-3 px-4 bg-white rounded">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-graph-up-arrow text-success me-2"></i>Weekly Medication Adherence</h5>
+                <small class="text-muted">Recorded compliance over recent 7 days for Patient Ramaswamy K.</small>
+            </div>
+            <div class="text-end">
+                <span class="fs-4 fw-bold text-success">{{ timetable.weekly_adherence.adherence_percentage }}%</span>
+                <span class="badge bg-light text-secondary border ms-2">{{ timetable.weekly_adherence.taken_count }} of {{ timetable.weekly_adherence.total_logged }} doses taken</span>
+            </div>
+        </div>
+        <div class="progress" style="height: 12px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ timetable.weekly_adherence.adherence_percentage }}%;" aria-valuenow="{{ timetable.weekly_adherence.adherence_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+</div>
+
+<!-- DAILY PILLBOX SCHEDULE GRID -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-dark mb-0">
+        <i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Daily Pillbox: {{ timetable.target_date_display }}
+    </h4>
+    <div class="small text-muted">
+        Scheduled Today: <strong>{{ timetable.daily_summary.total_scheduled }}</strong> doses | Taken: <strong>{{ timetable.daily_summary.total_taken }}</strong>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- MORNING SLOT -->
+    <div class="col-lg-6 col-xl-3">
+        <div class="card h-100 shadow-sm border-top border-4 border-warning">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-sun-fill text-warning me-2"></i>Morning</h5>
+                    <small class="text-muted">08:00 AM • Breakfast</small>
+                </div>
+                <span class="badge bg-warning text-dark">{{ timetable.slots.morning.doses|length }}</span>
+            </div>
+            <div class="card-body p-2">
+                {% if timetable.slots.morning.doses %}
+                    {% for item in timetable.slots.morning.doses %}
+                        {% include "schedule_item_card.html" %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4 text-muted small fst-italic">No morning medicines</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- AFTERNOON SLOT -->
+    <div class="col-lg-6 col-xl-3">
+        <div class="card h-100 shadow-sm border-top border-4 border-primary">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-brightness-high-fill text-primary me-2"></i>Afternoon</h5>
+                    <small class="text-muted">01:00 PM • Lunch</small>
+                </div>
+                <span class="badge bg-primary">{{ timetable.slots.afternoon.doses|length }}</span>
+            </div>
+            <div class="card-body p-2">
+                {% if timetable.slots.afternoon.doses %}
+                    {% for item in timetable.slots.afternoon.doses %}
+                        {% include "schedule_item_card.html" %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4 text-muted small fst-italic">No afternoon medicines</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- NIGHT SLOT -->
+    <div class="col-lg-6 col-xl-3">
+        <div class="card h-100 shadow-sm border-top border-4 border-dark">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-moon-stars-fill text-dark me-2"></i>Night</h5>
+                    <small class="text-muted">08:30 PM • Dinner / Bedtime</small>
+                </div>
+                <span class="badge bg-dark">{{ timetable.slots.night.doses|length }}</span>
+            </div>
+            <div class="card-body p-2">
+                {% if timetable.slots.night.doses %}
+                    {% for item in timetable.slots.night.doses %}
+                        {% include "schedule_item_card.html" %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4 text-muted small fst-italic">No night medicines</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- AS NEEDED (SOS) SLOT -->
+    <div class="col-lg-6 col-xl-3">
+        <div class="card h-100 shadow-sm border-top border-4 border-danger">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-exclamation-circle-fill text-danger me-2"></i>As Needed</h5>
+                    <small class="text-muted">SOS / PRN (Fever, Pain)</small>
+                </div>
+                <span class="badge bg-danger">{{ timetable.slots.sos.doses|length }}</span>
+            </div>
+            <div class="card-body p-2">
+                {% if timetable.slots.sos.doses %}
+                    {% for item in timetable.slots.sos.doses %}
+                        {% include "schedule_item_card.html" %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4 text-muted small fst-italic">No SOS medicines</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const scheduleScenarios = {
+    geriatric_mixed: {
+        medicines: "Tab Telma 40mg 1-0-0 (morning)\nTab Glycomet 500mg 1-0-1 after food\nTab Augmentin 625mg 1-0-1 for 5 days\nTab Atorva 10mg 0-0-1 night\nTab Dolo 650mg SOS"
+    },
+    cardiac_chronic: {
+        medicines: "Tab Telma 40mg 1-0-0\nTab Ecosprin 75mg 0-0-1 after food\nTab Concor 5mg 1-0-0\nTab Atorva 20mg 0-0-1 bedtime"
+    }
+};
+
+function loadScheduleScenario(key) {
+    if (scheduleScenarios[key]) {
+        document.getElementById('medicines_input').value = scheduleScenarios[key].medicines;
+    }
+}
+
+function clearScheduleInputs() {
+    document.getElementById('medicines_input').value = '';
+}
+
+// 1-Click Adherence Tracking Action
+function updateDoseStatus(medName, slotKey, targetDate, status, btnElement) {
+    fetch('/api/adherence/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            patient_id: 1,
+            medicine_name: medName,
+            slot_key: slotKey,
+            scheduled_date: targetDate,
+            status: status
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const card = btnElement.closest('.pill-card');
+            const badge = card.querySelector('.adherence-badge');
+            if (status === 'TAKEN') {
+                badge.className = 'adherence-badge badge bg-success';
+                badge.innerHTML = '<i class="bi bi-check2 me-1"></i>Taken';
+                card.style.opacity = '0.75';
+            } else {
+                badge.className = 'adherence-badge badge bg-danger';
+                badge.innerHTML = '<i class="bi bi-x me-1"></i>Missed';
+                card.style.opacity = '0.75';
+            }
+        }
+    })
+    .catch(err => console.error("Adherence log error:", err));
+}
+
+// HTML5 Web Notifications API
+function enableBrowserNotifications() {
+    if (!("Notification" in window)) {
+        alert("This browser does not support desktop notifications.");
+        return;
+    }
+    Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+            const btn = document.getElementById('btnNotification');
+            btn.className = "btn btn-sm btn-success";
+            btn.innerHTML = '<i class="bi bi-bell-check-fill me-1"></i>Reminders Active';
+            new Notification("MediSafe AI Reminder Alert", {
+                body: "Medication reminders are now active for Ramaswamy K.",
+                icon: "https://cdn-icons-png.flaticon.com/512/822/822143.png"
+            });
+        }
+    });
+}
+
+// Audio synthesizer chime for elderly accessibility
+function playChime() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); // A5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.6);
+    } catch(e) {
+        console.log("Audio not allowed without user gesture");
+    }
+}
+
+function triggerTestReminder() {
+    playChime();
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("⏰ Morning Medicine Reminder (08:00 AM)", {
+            body: "Time for Ramaswamy K. to take: Telma 40mg (1 Tab) and Glycomet 500mg (1 Tab) after breakfast.",
+            icon: "https://cdn-icons-png.flaticon.com/512/822/822143.png"
+        });
+    } else {
+        alert("🔔 [MediSafe AI Reminder - 08:00 AM]\n\nTime for Ramaswamy K. to take morning medicines:\n• Telma 40mg (1 Tab after breakfast)\n• Glycomet 500mg (1 Tab after breakfast)\n\nDrink a full glass of water.");
+    }
+}
+</script>
+{% endblock %}

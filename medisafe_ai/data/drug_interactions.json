@@ -1,0 +1,281 @@
+﻿[
+  {
+    "drug_a": "aspirin",
+    "drug_b": "clopidogrel",
+    "severity": "MODERATE",
+    "category": "Bleeding Risk",
+    "mechanism": "Dual antiplatelet therapy provides synergistic platelet inhibition.",
+    "patient_warning": "Increased Bleeding Risk: Taking both Aspirin and Clopidogrel thins your blood more. Watch for easy bruising, bleeding gums, nosebleeds, or dark black stools. Report any unusual bleeding to your doctor immediately.",
+    "clinical_recommendation": "Appropriate only if specifically prescribed for post-PCI/stenting or acute coronary syndrome. Monitor closely for signs of gastrointestinal bleeding."
+  },
+  {
+    "drug_a": "aspirin",
+    "drug_b": "warfarin",
+    "severity": "HIGH",
+    "category": "Major Bleeding Risk",
+    "mechanism": "Combining an antiplatelet with a vitamin K antagonist substantially increases major hemorrhage risk.",
+    "patient_warning": "Severe Bleeding Danger: Taking Aspirin together with Warfarin significantly increases the risk of stomach ulcers and serious internal bleeding. Do not take together unless your cardiologist specifically instructed you to do so.",
+    "clinical_recommendation": "Avoid concurrent use unless strictly indicated (e.g. mechanical heart valve). If required, consider PPI gastroprotection and monitor INR frequently."
+  },
+  {
+    "drug_a": "clopidogrel",
+    "drug_b": "warfarin",
+    "severity": "HIGH",
+    "category": "Major Bleeding Risk",
+    "mechanism": "Potent antiplatelet combined with systemic anticoagulant sharply multiplies bleeding incidents.",
+    "patient_warning": "Severe Bleeding Danger: Clopidogrel and Warfarin together can cause dangerous bleeding. Immediately report any blood in urine, black stools, or unusual weakness.",
+    "clinical_recommendation": "High risk of major hemorrhage. Co-prescription requires specialist cardiology/hematology justification and close monitoring."
+  },
+  {
+    "drug_a": "aspirin",
+    "drug_b": "ibuprofen",
+    "severity": "HIGH",
+    "category": "Cardiovascular & GI Bleeding",
+    "mechanism": "Ibuprofen interferes with the irreversible antiplatelet cardioprotective effect of low-dose Aspirin and increases GI ulceration.",
+    "patient_warning": "Loss of Heart Protection & Stomach Bleeding: Ibuprofen blocks Aspirin from protecting your heart, and together they severely irritate your stomach lining. Use Paracetamol instead for mild pain, or consult your doctor.",
+    "clinical_recommendation": "Avoid regular NSAIDs with cardioprotective aspirin. If an NSAID is necessary, take Aspirin at least 2 hours before the NSAID, or use Paracetamol."
+  },
+  {
+    "drug_a": "ibuprofen",
+    "drug_b": "warfarin",
+    "severity": "HIGH",
+    "category": "Major Bleeding Risk",
+    "mechanism": "NSAIDs cause gastric mucosal injury and inhibit platelet aggregation, greatly amplifying warfarin-induced bleeding.",
+    "patient_warning": "Severe Stomach Bleeding Hazard: Ibuprofen combined with Warfarin can cause life-threatening stomach or intestinal bleeding. Avoid Ibuprofen and use safer alternatives recommended by your doctor.",
+    "clinical_recommendation": "Strongly avoid NSAIDs in patients on warfarin. Recommend Paracetamol or topical analgesics for pain."
+  },
+  {
+    "drug_a": "telmisartan",
+    "drug_b": "spironolactone",
+    "severity": "HIGH",
+    "category": "Hyperkalemia / Kidney Strain",
+    "mechanism": "Both ARBs and aldosterone antagonists decrease renal excretion of potassium, causing dangerous hyperkalemia.",
+    "patient_warning": "High Potassium & Kidney Alert: Taking Telmisartan with Spironolactone can cause high potassium levels in your blood. This can lead to heart rhythm abnormalities, muscle weakness, or kidney strain. Regular blood tests are required.",
+    "clinical_recommendation": "Check baseline serum potassium and creatinine within 1-2 weeks of initiating combination, and periodically thereafter."
+  },
+  {
+    "drug_a": "losartan",
+    "drug_b": "spironolactone",
+    "severity": "HIGH",
+    "category": "Hyperkalemia / Kidney Strain",
+    "mechanism": "Combined renin-angiotensin blockade and potassium-sparing action produces dangerous hyperkalemia.",
+    "patient_warning": "High Potassium & Kidney Alert: Taking Losartan with Spironolactone can cause potassium to build up in your body, risking abnormal heartbeats. Have your blood potassium tested regularly.",
+    "clinical_recommendation": "Monitor serum potassium and renal function closely. Advise patient against salt substitutes containing potassium chloride."
+  },
+  {
+    "drug_a": "enalapril",
+    "drug_b": "spironolactone",
+    "severity": "HIGH",
+    "category": "Hyperkalemia / Kidney Strain",
+    "mechanism": "ACE inhibitor plus potassium-sparing diuretic synergistically impedes potassium elimination.",
+    "patient_warning": "High Potassium Alert: Enalapril combined with Spironolactone can elevate potassium to dangerous levels in older adults. Contact your doctor if you experience extreme fatigue or numbness.",
+    "clinical_recommendation": "Monitor potassium and eGFR at 1 week, 1 month, and every 3-6 months. Discontinue potassium supplements."
+  },
+  {
+    "drug_a": "telmisartan",
+    "drug_b": "ibuprofen",
+    "severity": "HIGH",
+    "category": "Acute Kidney Injury & BP Failure",
+    "mechanism": "NSAIDs inhibit renal prostaglandins, causing afferent arteriolar constriction while ARBs cause efferent vasodilation, precipitating acute renal failure.",
+    "patient_warning": "Kidney Strain & High Blood Pressure: Ibuprofen weakens the blood-pressure lowering effect of Telmisartan and can cause sudden damage to your kidneys, especially if you are dehydrated. Avoid regular painkiller use.",
+    "clinical_recommendation": "Avoid chronic NSAID co-administration. Monitor blood pressure and renal function. Consider Paracetamol for pain relief."
+  },
+  {
+    "drug_a": "losartan",
+    "drug_b": "ibuprofen",
+    "severity": "HIGH",
+    "category": "Acute Kidney Injury & BP Failure",
+    "mechanism": "NSAID-induced prostaglandin inhibition impairs renal autoregulation in the presence of an ARB.",
+    "patient_warning": "Kidney Risk & BP Spike: Pain medicines like Ibuprofen counteract Losartan's blood pressure control and can harm your kidneys. Ask your doctor for kidney-safe pain relief.",
+    "clinical_recommendation": "Use alternative analgesia. If NSAID is unavoidable, monitor blood pressure, fluid retention, and serum creatinine."
+  },
+  {
+    "drug_a": "enalapril",
+    "drug_b": "ibuprofen",
+    "severity": "HIGH",
+    "category": "Acute Kidney Injury & BP Failure",
+    "mechanism": "Dual inhibition of renal hemodynamic autoregulation produces sharp reduction in glomerular filtration rate.",
+    "patient_warning": "Kidney Damage Warning: Taking Ibuprofen while on Enalapril can suddenly reduce kidney function and raise blood pressure. Avoid taking over-the-counter painkillers without doctor advice.",
+    "clinical_recommendation": "High risk of acute kidney injury (component of 'triple whammy'). Replace with non-nephrotoxic analgesic."
+  },
+  {
+    "drug_a": "furosemide",
+    "drug_b": "ibuprofen",
+    "severity": "HIGH",
+    "category": "Reduced Diuresis & Kidney Failure",
+    "mechanism": "NSAIDs inhibit diuretic prostaglandins, decreasing furosemide's natriuretic effect and causing fluid retention.",
+    "patient_warning": "Fluid Retention & Kidney Strain: Ibuprofen stops water pills (Furosemide) from removing excess fluid, which can worsen swelling, shortness of breath, and strain your heart and kidneys.",
+    "clinical_recommendation": "Avoid NSAIDs in heart failure and edema patients on loop diuretics. Monitor for fluid overload and worsening renal profile."
+  },
+  {
+    "drug_a": "atorvastatin",
+    "drug_b": "azithromycin",
+    "severity": "MODERATE",
+    "category": "Muscle Toxicity (Myopathy)",
+    "mechanism": "Macrolide antibiotics inhibit hepatic CYP3A4 metabolism and transport of statins, elevating systemic statin levels.",
+    "patient_warning": "Muscle Pain & Weakness Alert: Taking Azithromycin with Atorvastatin can raise statin levels, leading to unexplained muscle cramps, severe aches, or dark urine. Contact your doctor immediately if muscle pain occurs.",
+    "clinical_recommendation": "Consider temporarily pausing Atorvastatin during the short course of Azithromycin, or advise patient to report muscle pain promptly."
+  },
+  {
+    "drug_a": "atorvastatin",
+    "drug_b": "ciprofloxacin",
+    "severity": "MODERATE",
+    "category": "Muscle Toxicity (Myopathy)",
+    "mechanism": "Ciprofloxacin mildly inhibits CYP3A4, moderately increasing statin exposure in geriatric patients.",
+    "patient_warning": "Muscle Warning: Watch for unusual muscle tenderness, weakness, or joint stiffness while taking this antibiotic with Atorvastatin.",
+    "clinical_recommendation": "Counsel patient on myopathy symptoms. Check CPK if severe muscle aches develop."
+  },
+  {
+    "drug_a": "ciprofloxacin",
+    "drug_b": "azithromycin",
+    "severity": "HIGH",
+    "category": "Cardiac Arrhythmia (QT Prolongation)",
+    "mechanism": "Additive cardiac potassium channel blockade leading to prolongation of the QT interval and risk of Torsades de Pointes.",
+    "patient_warning": "Heart Rhythm Risk: Taking Ciprofloxacin together with Azithromycin can cause irregular or rapid heart rhythms in older adults. Seek emergency care if you feel dizzy, faint, or experience chest flutter.",
+    "clinical_recommendation": "Avoid dual QT-prolonging antimicrobial therapy. Check baseline ECG and electrolytes if co-prescription is unavoidable."
+  },
+  {
+    "drug_a": "glimepiride",
+    "drug_b": "ciprofloxacin",
+    "severity": "HIGH",
+    "category": "Severe Hypoglycemia",
+    "mechanism": "Fluoroquinolones potentiate insulin release from pancreatic beta cells and displace sulfonylureas from protein binding sites.",
+    "patient_warning": "Dangerously Low Blood Sugar: Ciprofloxacin can cause sudden severe drops in blood sugar when taken with Glimepiride. Symptoms include shakiness, sweating, confusion, and dizziness. Keep glucose tablets or sweet fruit juice nearby.",
+    "clinical_recommendation": "Monitor blood glucose frequently (multiple times daily). Consider temporary dose reduction of glimepiride."
+  },
+  {
+    "drug_a": "bisoprolol",
+    "drug_b": "metformin",
+    "severity": "MODERATE",
+    "category": "Masking Hypoglycemia Symptoms",
+    "mechanism": "Beta-blockers attenuate sympathetic warning signs of hypoglycemia (palpitations, tremors), though sweating usually persists.",
+    "patient_warning": "Hidden Low Blood Sugar Warning: Bisoprolol can hide common warning signs of low blood sugar such as trembling and rapid heartbeat. Pay special attention to hunger, dizziness, sweating, or confusion.",
+    "clinical_recommendation": "Educate diabetic patient on diaphoresis as a reliable symptom of hypoglycemia during beta-blocker therapy."
+  },
+  {
+    "drug_a": "bisoprolol",
+    "drug_b": "glimepiride",
+    "severity": "MODERATE",
+    "category": "Masking Hypoglycemia & Delayed Recovery",
+    "mechanism": "Beta-blockers mask hypoglycemia warning signs and inhibit hepatic glycogenolysis, slowing recovery from low blood sugar.",
+    "patient_warning": "Masked Low Sugar: Bisoprolol masks rapid heartbeat and tremors when your sugar drops. Check your blood sugar with your glucometer if you feel unusual sweating, dizziness, or lightheadedness.",
+    "clinical_recommendation": "Ensure patient has accessible fast-acting carbohydrates. Recommend regular blood glucose monitoring."
+  },
+  {
+    "drug_a": "alprazolam",
+    "drug_b": "tramadol",
+    "severity": "HIGH",
+    "category": "Sedation & Respiratory Depression",
+    "mechanism": "Additive central nervous system and respiratory depression from combined benzodiazepine and opioid action.",
+    "patient_warning": "Severe Drowsiness & Fall Danger: Taking Alprazolam and Tramadol together causes extreme drowsiness, slow breathing, confusion, and dramatically raises the risk of dangerous falls and hip fractures in seniors. Do not drive or walk unattended if dizzy.",
+    "clinical_recommendation": "Avoid co-prescribing opioids and benzodiazepines whenever possible. If required, use the lowest effective doses and advise caregiver on sedation monitoring."
+  },
+  {
+    "drug_a": "alprazolam",
+    "drug_b": "zolpidem",
+    "severity": "HIGH",
+    "category": "Extreme Sedation & Severe Fall Risk",
+    "mechanism": "Profound synergistic GABA-A receptor modulation causing severe cognitive impairment and motor ataxia.",
+    "patient_warning": "Extreme Fall & Confusion Alert: Taking two sleep/calming medicines (Alprazolam and Zolpidem) together is very dangerous for older adults. It causes severe disorientation, memory lapses, and high risk of falling at night.",
+    "clinical_recommendation": "Avoid dual sedative therapy. Consolidate to a single agent or initiate non-pharmacological sleep hygiene."
+  },
+  {
+    "drug_a": "tramadol",
+    "drug_b": "zolpidem",
+    "severity": "HIGH",
+    "category": "Central Nervous System Depression",
+    "mechanism": "Potentiated sedation, impaired psychomotor coordination, and increased respiratory depression.",
+    "patient_warning": "High Fall & Drowsiness Hazard: Combining a strong painkiller with a sleeping tablet causes intense grogginess and loss of balance, especially when getting up to use the bathroom at night.",
+    "clinical_recommendation": "Avoid combination in geriatric patients. Ensure bed rails or assistance with nighttime ambulation."
+  },
+  {
+    "drug_a": "clopidogrel",
+    "drug_b": "omeprazole",
+    "severity": "MODERATE",
+    "category": "Reduced Antiplatelet Efficacy",
+    "mechanism": "Omeprazole competitively inhibits hepatic CYP2C19, preventing activation of Clopidogrel to its active metabolite.",
+    "patient_warning": "Reduced Heart Protection: Omeprazole blocks Clopidogrel from working effectively to protect you against blood clots. Your doctor may switch your acidity medicine to Pantoprazole or Rabeprazole, which are safer alternatives.",
+    "clinical_recommendation": "Switch PPI from Omeprazole to Pantoprazole or Rabeprazole, which exhibit significantly less CYP2C19 interaction."
+  },
+  {
+    "drug_a": "metformin",
+    "drug_b": "furosemide",
+    "severity": "MODERATE",
+    "category": "Dehydration & Renal Strain",
+    "mechanism": "Loop diuretics can induce volume depletion and acute pre-renal azotemia, increasing metformin accumulation and lactic acidosis risk.",
+    "patient_warning": "Dehydration & Kidney Alert: Water pills like Furosemide can cause dehydration. If you become dehydrated while on Metformin, kidneys can get stressed. Drink adequate fluids as advised by your doctor.",
+    "clinical_recommendation": "Ensure adequate hydration. Check eGFR periodically; pause metformin if dehydration, severe infection, or acute illness occurs."
+  },
+  {
+    "drug_a": "spironolactone",
+    "drug_b": "aspirin",
+    "severity": "MODERATE",
+    "category": "Blunted Diuresis & Ulcer Risk",
+    "mechanism": "Aspirin blunts aldosterone antagonist-mediated natriuresis and increases gastric mucosal injury.",
+    "patient_warning": "Reduced Effect & Stomach Upset: Taking Aspirin regularly can reduce the benefits of Spironolactone and cause stomach irritation. Take after meals.",
+    "clinical_recommendation": "Monitor blood pressure and fluid status if co-administered."
+  },
+  {
+    "drug_a": "levothyroxine",
+    "drug_b": "pantoprazole",
+    "severity": "LOW",
+    "category": "Reduced Thyroid Absorption",
+    "mechanism": "Gastric acid suppression impairs dissolution and absorption of levothyroxine in the gut.",
+    "patient_warning": "Thyroid Medicine Absorption Notice: Acidity medicines like Pantoprazole can reduce how much thyroid medicine your body absorbs. Always take Levothyroxine first thing in the morning on an empty stomach with plain water, and wait at least 30-60 minutes before taking other medicines.",
+    "clinical_recommendation": "Separate administration by at least 4 hours, or take levothyroxine 30-60 minutes before breakfast and PPI later. Monitor TSH."
+  },
+  {
+    "drug_a": "levothyroxine",
+    "drug_b": "omeprazole",
+    "severity": "LOW",
+    "category": "Reduced Thyroid Absorption",
+    "mechanism": "Decreased gastric acidity diminishes intestinal absorption of oral levothyroxine.",
+    "patient_warning": "Absorption Notice: Acidity tablets can interfere with thyroid hormone absorption. Take Levothyroxine on an empty stomach at least 30 to 60 minutes before other medicines or food.",
+    "clinical_recommendation": "Monitor TSH levels periodically and separate dosing times."
+  },
+  {
+    "drug_a": "bisoprolol",
+    "drug_b": "amlodipine",
+    "severity": "MODERATE",
+    "category": "Additive Hypotension & Bradycardia",
+    "mechanism": "Combined arterial vasodilation and cardiac inotropic/chronotropic depression.",
+    "patient_warning": "Low Blood Pressure & Dizziness: Combining Bisoprolol with Amlodipine lowers blood pressure effectively, but can occasionally cause lightheadedness when standing up quickly. Stand up slowly from sitting or lying down.",
+    "clinical_recommendation": "Synergistic antihypertensive regimen. Monitor for symptomatic postural hypotension and peripheral edema."
+  },
+  {
+    "drug_a": "carvedilol",
+    "drug_b": "amlodipine",
+    "severity": "MODERATE",
+    "category": "Additive Hypotension",
+    "mechanism": "Dual alpha/beta blockade combined with dihydropyridine calcium channel antagonism.",
+    "patient_warning": "Dizziness Warning: This combination can cause your blood pressure to drop when you stand up. Rise slowly from bed or chairs to avoid falls.",
+    "clinical_recommendation": "Standard combination in refractory hypertension; monitor blood pressure and heart rate."
+  },
+  {
+    "drug_a": "warfarin",
+    "drug_b": "ciprofloxacin",
+    "severity": "HIGH",
+    "category": "Severe INR Elevation & Bleeding",
+    "mechanism": "Ciprofloxacin inhibits warfarin's CYP1A2 and CYP3A4 metabolism and alters gut flora producing vitamin K.",
+    "patient_warning": "Critical Bleeding Hazard: Ciprofloxacin greatly magnifies Warfarin's blood-thinning effect, often causing dangerous spikes in INR levels. Your doctor must test your blood INR within 2-3 days of starting this antibiotic.",
+    "clinical_recommendation": "Expect significant INR rise. Monitor INR after 48-72 hours and proactively reduce warfarin dose by 25-50%."
+  },
+  {
+    "drug_a": "warfarin",
+    "drug_b": "azithromycin",
+    "severity": "MODERATE",
+    "category": "Elevated Bleeding Risk",
+    "mechanism": "Macrolides alter intestinal microflora synthesis of vitamin K, potentiating warfarin action.",
+    "patient_warning": "Blood Thinning Notice: Azithromycin can increase the effect of your blood thinner Warfarin. Watch for easy bruising or bleeding gums.",
+    "clinical_recommendation": "Check INR within 3-4 days of initiating azithromycin."
+  },
+  {
+    "drug_a": "furosemide",
+    "drug_b": "telmisartan",
+    "severity": "MODERATE",
+    "category": "Hypotension & Dehydration",
+    "mechanism": "Combined volume depletion and renin-angiotensin blockade can cause sharp first-dose hypotension.",
+    "patient_warning": "Dizziness & Low Blood Pressure Alert: Taking Furosemide and Telmisartan together can cause low blood pressure, especially when you are not drinking enough water. Sit down if you feel lightheaded.",
+    "clinical_recommendation": "Ensure euvolemia before starting ARB. Monitor electrolytes and renal function."
+  }
+]

@@ -1,0 +1,39 @@
+﻿<div class="card pill-card mb-2 border shadow-none bg-white p-2">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <div class="fw-bold text-dark fs-6">{{ item.medicine.brand_name }}</div>
+            <div class="small text-muted">{{ item.medicine.display_generic }} • {{ item.medicine.dosage_str }}</div>
+        </div>
+        <div>
+            {% if item.adherence_status == 'TAKEN' %}
+                <span class="adherence-badge badge bg-success"><i class="bi bi-check2 me-1"></i>Taken</span>
+            {% elif item.adherence_status == 'MISSED' %}
+                <span class="adherence-badge badge bg-danger"><i class="bi bi-x me-1"></i>Missed</span>
+            {% else %}
+                <span class="adherence-badge badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pending</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="my-2 small">
+        <span class="badge bg-light text-dark border"><i class="bi bi-egg-fried me-1"></i>{{ item.medicine.timing_label }}</span>
+        <span class="badge bg-{{ item.course_status.badge_class }}">{{ item.course_status.status_label }}</span>
+    </div>
+
+    {% if item.course_status.is_active and item.slot_key != 'sos' %}
+    <div class="d-flex gap-1 mt-1">
+        <button type="button" class="btn btn-sm btn-outline-success flex-fill py-0" 
+                onclick="updateDoseStatus('{{ item.medicine.brand_name }}', '{{ item.slot_key }}', '{{ timetable.target_date }}', 'TAKEN', this)">
+            <i class="bi bi-check2"></i> Taken
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger flex-fill py-0" 
+                onclick="updateDoseStatus('{{ item.medicine.brand_name }}', '{{ item.slot_key }}', '{{ timetable.target_date }}', 'MISSED', this)">
+            <i class="bi bi-x"></i> Missed
+        </button>
+    </div>
+    {% elif not item.course_status.is_active %}
+    <div class="alert alert-danger py-1 px-2 mb-0 small text-center fw-bold">
+        🛑 STOPPED / COMPLETED
+    </div>
+    {% endif %}
+</div>

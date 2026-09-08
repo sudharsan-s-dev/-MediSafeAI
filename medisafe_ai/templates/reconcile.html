@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Module 1: Medication Reconciliation Engine - MediSafe AI{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="bi bi-arrow-left-right text-primary me-2"></i>Medication Reconciliation Engine</h2>
+                <p class="text-muted mb-0">Compares previous and current prescriptions to detect what has changed, stopped, started, or duplicated by <strong>active ingredient</strong>.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-secondary p-2"><i class="bi bi-person-circle me-1"></i> Patient: Ramaswamy K. (Age 72)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scenario Presets Bar -->
+<div class="card mb-4 bg-light border-0 shadow-sm">
+    <div class="card-body py-2 px-3">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="fw-semibold text-secondary small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Load Clinical Case:</span>
+            <button class="btn btn-sm btn-outline-primary" onclick="loadScenario('discharge')">
+                <i class="bi bi-hospital me-1"></i>Case 1: Hospital Discharge Transition
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="loadScenario('duplicate')">
+                <i class="bi bi-exclamation-triangle me-1"></i>Case 2: Duplicate Paracetamol Alert
+            </button>
+            <button class="btn btn-sm btn-outline-success" onclick="loadScenario('brand_switch')">
+                <i class="bi bi-arrow-repeat me-1"></i>Case 3: Brand Name Substitutions
+            </button>
+            <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearInputs()">
+                <i class="bi bi-eraser me-1"></i>Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Prescription Input Forms -->
+<form id="reconcileForm" method="POST" action="/reconcile">
+    <div class="row g-4 mb-4">
+        <!-- Previous / Old Prescription -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history text-secondary me-2"></i>Previous Regimen (Old)</h5>
+                        <small class="text-muted">Home medications, previous clinic visit, or pre-admission list</small>
+                    </div>
+                    <span class="badge bg-secondary">Reference</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label for="old_label" class="form-label small text-muted">Visit Label / Date:</label>
+                        <input type="text" class="form-control form-control-sm" id="old_label" name="old_label" value="{{ old_label or 'Previous Visit (01 Aug 2026)' }}">
+                    </div>
+                    <label for="old_medicines" class="form-label fw-semibold">Medicines (one per line):</label>
+                    <textarea class="form-control" id="old_medicines" name="old_medicines" rows="7" placeholder="e.g.&#10;Tab Telma 20mg 1-0-0&#10;Tab Glycomet 500mg 1-0-0 after food&#10;Tab Pantocid 40mg 1-0-0 before food&#10;Tab Dolo 650mg SOS" required>{{ old_text or '' }}</textarea>
+                    <div class="form-text small">Enter brand names or generics with optional dose, frequency (OD, BD, TDS, 1-0-1), and timing.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current / New Prescription -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm border-primary">
+                <div class="card-header bg-primary bg-opacity-10 py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-file-earmark-medical text-primary me-2"></i>Current Regimen (New)</h5>
+                        <small class="text-muted">Hospital discharge prescription, revised specialist prescription</small>
+                    </div>
+                    <span class="badge bg-primary">Current</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label for="new_label" class="form-label small text-muted">Visit Label / Date:</label>
+                        <input type="text" class="form-control form-control-sm" id="new_label" name="new_label" value="{{ new_label or 'Hospital Discharge (08 Sep 2026)' }}">
+                    </div>
+                    <label for="new_medicines" class="form-label fw-semibold">Medicines (one per line):</label>
+                    <textarea class="form-control border-primary" id="new_medicines" name="new_medicines" rows="7" placeholder="e.g.&#10;Tab Telma 40mg 1-0-0&#10;Tab Glycomet 500mg 1-0-1 after food&#10;Tab Calpol 650mg SOS&#10;Tab Atorva 10mg 0-0-1 night" required>{{ new_text or '' }}</textarea>
+                    <div class="form-text small">Our engine automatically maps brands to active ingredients for safe cross-matching.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mb-5">
+        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm fw-bold">
+            <i class="bi bi-play-circle-fill me-2"></i>Run Medication Reconciliation
+        </button>
+    </div>
+</form>
+
+{% if result %}
+<!-- RECONCILIATION RESULTS SECTION -->
+<div class="card shadow mb-4" id="results">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-clipboard2-pulse-fill text-primary me-2"></i>Reconciliation Report</h4>
+            <small class="text-muted">Comparing <strong>{{ old_label }}</strong> vs <strong>{{ new_label }}</strong></small>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-secondary me-2" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i>Print View
+            </button>
+            <span class="badge bg-success px-3 py-2"><i class="bi bi-check2-circle me-1"></i>Reconciliation Complete</span>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <!-- Summary Metric Cards -->
+        <div class="row g-3 mb-4 text-center">
+            <div class="col">
+                <div class="card bg-light border-0 p-2">
+                    <span class="text-muted small">Total Old</span>
+                    <h3 class="fw-bold text-secondary mb-0">{{ result.summary.total_old_medicines }}</h3>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card bg-light border-0 p-2">
+                    <span class="text-muted small">Total New</span>
+                    <h3 class="fw-bold text-primary mb-0">{{ result.summary.total_new_medicines }}</h3>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card p-2 border-0 badge-same">
+                    <span class="small fw-semibold">Same (Continue)</span>
+                    <h3 class="fw-bold mb-0">{{ result.summary.same_count }}</h3>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card p-2 border-0 badge-changed">
+                    <span class="small fw-semibold">Changed (Dose/Freq)</span>
+                    <h3 class="fw-bold mb-0">{{ result.summary.changed_count }}</h3>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card p-2 border-0 badge-discontinued">
+                    <span class="small fw-semibold">Discontinued (STOP)</span>
+                    <h3 class="fw-bold mb-0">{{ result.summary.discontinued_count }}</h3>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card p-2 border-0 badge-new">
+                    <span class="small fw-semibold">New (Start)</span>
+                    <h3 class="fw-bold mb-0">{{ result.summary.new_count }}</h3>
+                </div>
+            </div>
+            {% if result.summary.duplicate_count > 0 %}
+            <div class="col">
+                <div class="card p-2 border-0 badge-duplicate">
+                    <span class="small fw-semibold">Duplicate Alerts</span>
+                    <h3 class="fw-bold mb-0">{{ result.summary.duplicate_count }}</h3>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if result.summary.has_critical_alerts %}
+        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-exclamation-octagon-fill fs-3 me-3 text-danger"></i>
+            <div>
+                <strong>Action Required for Patient Safety:</strong>
+                Prescription discrepancies detected! Ensure the patient <strong>STOPS</strong> discontinued medications and resolves any active ingredient duplicates before taking doses.
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Detailed Reconciliation Table -->
+        <h5 class="fw-bold mb-3"><i class="bi bi-table me-2"></i>Detailed Drug-by-Drug Comparison</h5>
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 14%;">Active Ingredient</th>
+                        <th style="width: 12%;">Status</th>
+                        <th style="width: 22%;">Previous Visit (Old)</th>
+                        <th style="width: 22%;">Current Visit (New)</th>
+                        <th style="width: 30%;">Plain-Language Instruction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in result.discrepancies %}
+                    <tr>
+                        <!-- Active Ingredient -->
+                        <td>
+                            <div class="fw-bold text-dark">{{ item.generic_name }}</div>
+                            <small class="text-muted d-block">{{ item.drug_class }}</small>
+                        </td>
+
+                        <!-- Category Status Badge -->
+                        <td>
+                            {% if item.category == 'SAME' %}
+                                <span class="badge badge-same px-2 py-1"><i class="bi bi-check-circle me-1"></i>SAME</span>
+                            {% elif item.category == 'CHANGED' %}
+                                <span class="badge badge-changed px-2 py-1"><i class="bi bi-pencil-square me-1"></i>CHANGED</span>
+                            {% elif item.category == 'DISCONTINUED' %}
+                                <span class="badge badge-discontinued px-2 py-1"><i class="bi bi-x-octagon me-1"></i>DISCONTINUED</span>
+                            {% elif item.category == 'NEW' %}
+                                <span class="badge badge-new px-2 py-1"><i class="bi bi-plus-circle me-1"></i>NEW</span>
+                            {% elif item.category == 'DUPLICATE' %}
+                                <span class="badge badge-duplicate px-2 py-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>DUPLICATE</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Old Prescription Details -->
+                        <td>
+                            {% if item.old_entry %}
+                                <div class="fw-semibold">{{ item.old_entry.brand_name }}</div>
+                                <div class="small text-muted">{{ item.old_entry.strength }} {{ item.old_entry.unit }} • {{ item.old_entry.frequency_label }}</div>
+                                <div class="small text-muted fst-italic">{{ item.old_entry.timing_label }}</div>
+                            {% else %}
+                                <span class="text-muted fst-italic">— Not Prescribed —</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- New Prescription Details -->
+                        <td>
+                            {% if item.new_entry %}
+                                {% if item.new_entry is iterable and item.new_entry is not mapping %}
+                                    {% for sub in item.new_entry %}
+                                        <div class="fw-semibold text-danger">{{ sub.brand_name }} ({{ sub.strength }}{{ sub.unit }})</div>
+                                        <div class="small text-muted">{{ sub.frequency_label }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="fw-semibold text-primary">{{ item.new_entry.brand_name }}</div>
+                                    <div class="small text-muted">{{ item.new_entry.strength }} {{ item.new_entry.unit }} • {{ item.new_entry.frequency_label }}</div>
+                                    <div class="small text-muted fst-italic">{{ item.new_entry.timing_label }}</div>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">STOPPED / OMITTED</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actionable Instruction -->
+                        <td>
+                            <p class="mb-0 fw-medium {{ 'text-danger' if item.category in ['DISCONTINUED', 'DUPLICATE'] else ('text-primary' if item.category == 'NEW' else 'text-dark') }}">
+                                {{ item.clinical_note }}
+                            </p>
+                            {% if item.change_details and item.change_details.strength_change %}
+                                <div class="badge bg-warning text-dark mt-1">{{ item.change_details.strength_change }}</div>
+                            {% endif %}
+                            {% if item.change_details and item.change_details.frequency_change %}
+                                <div class="badge bg-info text-dark mt-1">{{ item.change_details.frequency_change }}</div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 p-3 bg-light rounded d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="fw-bold text-dark"><i class="bi bi-shield-check text-success me-1"></i>Next Checkpoint: Safety Screening</span>
+                <p class="small text-muted mb-0">Check this revised prescription against drug interactions, patient allergies, and overdose thresholds.</p>
+            </div>
+            <form method="POST" action="/safety">
+                <input type="hidden" name="medicines_input" value="{{ new_text }}">
+                <input type="hidden" name="patient_age" value="72">
+                <input type="hidden" name="allergies_input" value="Penicillin, Sulfa drugs">
+                <button type="submit" class="btn btn-success fw-semibold">
+                    <i class="bi bi-arrow-right-circle me-1"></i>Proceed to Module 2: Safety Checks
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const scenarios = {
+    discharge: {
+        old_label: "Previous Clinic Regimen (01 Aug 2026)",
+        new_label: "Hospital Discharge Regimen (08 Sep 2026)",
+        old_text: "Tab Telma 20mg 1-0-0 (morning)\nTab Glycomet 500mg 1-0-0 after food\nTab Pantocid 40mg 1-0-0 before breakfast\nTab Ecosprin 75mg 0-0-1 after dinner\nTab Dolo 650mg SOS",
+        new_text: "Tab Telma 40mg 1-0-0 (morning)\nTab Glycomet 500mg 1-0-1 after food\nTab Ecosprin 75mg 0-0-1 after dinner\nTab Calpol 650mg SOS\nTab Atorva 10mg 0-0-1 bedtime"
+    },
+    duplicate: {
+        old_label: "Previous Prescription (15 Jul 2026)",
+        new_label: "New Consultation (08 Sep 2026)",
+        old_text: "Tab Dolo 650mg 1-0-1 after food",
+        new_text: "Tab Dolo 650mg 1-0-1 after food\nTab Crocin 500mg 1-0-1 after food\nTab Amlong 5mg 1-0-0"
+    },
+    brand_switch: {
+        old_label: "Original Prescription (Hospital A)",
+        new_label: "Pharmacy Substitution (Local Store)",
+        old_text: "Tab Telma 40mg 1-0-0\nTab Lipitor 10mg 0-0-1\nTab Dolo 650mg SOS",
+        new_text: "Tab Arbitel 40mg 1-0-0\nTab Atorva 10mg 0-0-1\nTab Calpol 650mg SOS"
+    }
+};
+
+function loadScenario(type) {
+    if (scenarios[type]) {
+        document.getElementById('old_label').value = scenarios[type].old_label;
+        document.getElementById('new_label').value = scenarios[type].new_label;
+        document.getElementById('old_medicines').value = scenarios[type].old_text;
+        document.getElementById('new_medicines').value = scenarios[type].new_text;
+    }
+}
+
+function clearInputs() {
+    document.getElementById('old_medicines').value = '';
+    document.getElementById('new_medicines').value = '';
+}
+
+// Automatically scroll to results if present
+window.addEventListener('DOMContentLoaded', () => {
+    const results = document.getElementById('results');
+    if (results) {
+        results.scrollIntoView({ behavior: 'smooth' });
+    }
+});
+</script>
+{% endblock %}

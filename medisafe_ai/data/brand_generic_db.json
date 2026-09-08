@@ -1,0 +1,624 @@
+{
+  "paracetamol": {
+    "generic_name": "paracetamol",
+    "ingredients": [
+      "paracetamol"
+    ],
+    "drug_class": "Analgesic / Antipyretic",
+    "default_unit": "mg",
+    "common_strengths": [
+      500,
+      650,
+      1000
+    ],
+    "max_daily_dose_mg": 4000,
+    "elderly_daily_dose_limit_mg": 3000,
+    "brands": [
+      "dolo",
+      "dolo 650",
+      "calpol",
+      "crocin",
+      "pacimol",
+      "pyigesic",
+      "tylenol",
+      "panadol",
+      "fepex",
+      "paracip"
+    ]
+  },
+  "telmisartan": {
+    "generic_name": "telmisartan",
+    "ingredients": [
+      "telmisartan"
+    ],
+    "drug_class": "Antihypertensive (ARB)",
+    "default_unit": "mg",
+    "common_strengths": [
+      20,
+      40,
+      80
+    ],
+    "brands": [
+      "telma",
+      "telmikind",
+      "telsartan",
+      "micardis",
+      "arbitel",
+      "telpres",
+      "telvas",
+      "sartel"
+    ]
+  },
+  "amlodipine": {
+    "generic_name": "amlodipine",
+    "ingredients": [
+      "amlodipine"
+    ],
+    "drug_class": "Antihypertensive (Calcium Channel Blocker)",
+    "default_unit": "mg",
+    "common_strengths": [
+      2.5,
+      5,
+      10
+    ],
+    "brands": [
+      "amlong",
+      "norvasc",
+      "stamlo",
+      "amlodac",
+      "amlovas",
+      "amlo"
+    ]
+  },
+  "metformin": {
+    "generic_name": "metformin",
+    "ingredients": [
+      "metformin"
+    ],
+    "drug_class": "Antidiabetic (Biguanide)",
+    "default_unit": "mg",
+    "common_strengths": [
+      500,
+      850,
+      1000
+    ],
+    "brands": [
+      "glycomet",
+      "glucophage",
+      "cetapin",
+      "obimet",
+      "forminal",
+      "riomet"
+    ]
+  },
+  "glimepiride": {
+    "generic_name": "glimepiride",
+    "ingredients": [
+      "glimepiride"
+    ],
+    "drug_class": "Antidiabetic (Sulfonylurea)",
+    "default_unit": "mg",
+    "common_strengths": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "brands": [
+      "amaryl",
+      "glimy",
+      "zoryl",
+      "gemer-g",
+      "glador"
+    ]
+  },
+  "glimepiride + metformin": {
+    "generic_name": "glimepiride + metformin",
+    "ingredients": [
+      "glimepiride",
+      "metformin"
+    ],
+    "drug_class": "Antidiabetic Combination",
+    "default_unit": "mg",
+    "common_strengths": [
+      1,
+      2,
+      500,
+      1000
+    ],
+    "brands": [
+      "gemer",
+      "zoryl-m",
+      "amaryl-m",
+      "glycomet-gp"
+    ]
+  },
+  "atorvastatin": {
+    "generic_name": "atorvastatin",
+    "ingredients": [
+      "atorvastatin"
+    ],
+    "drug_class": "Lipid-Lowering (Statin)",
+    "default_unit": "mg",
+    "common_strengths": [
+      10,
+      20,
+      40,
+      80
+    ],
+    "brands": [
+      "atorva",
+      "lipitor",
+      "atorlip",
+      "storvas",
+      "tonact",
+      "atocor"
+    ]
+  },
+  "rosuvastatin": {
+    "generic_name": "rosuvastatin",
+    "ingredients": [
+      "rosuvastatin"
+    ],
+    "drug_class": "Lipid-Lowering (Statin)",
+    "default_unit": "mg",
+    "common_strengths": [
+      5,
+      10,
+      20,
+      40
+    ],
+    "brands": [
+      "rosuvas",
+      "crestor",
+      "rosave",
+      "razel",
+      "turbovas"
+    ]
+  },
+  "aspirin": {
+    "generic_name": "aspirin",
+    "ingredients": [
+      "aspirin"
+    ],
+    "drug_class": "Antiplatelet / NSAID",
+    "default_unit": "mg",
+    "common_strengths": [
+      75,
+      150,
+      325
+    ],
+    "brands": [
+      "ecosprin",
+      "disprin",
+      "asa",
+      "delisprin",
+      "loprin",
+      "bayer"
+    ]
+  },
+  "clopidogrel": {
+    "generic_name": "clopidogrel",
+    "ingredients": [
+      "clopidogrel"
+    ],
+    "drug_class": "Antiplatelet",
+    "default_unit": "mg",
+    "common_strengths": [
+      75
+    ],
+    "brands": [
+      "clopilet",
+      "plavix",
+      "deplatt",
+      "ceruvit",
+      "clopivas"
+    ]
+  },
+  "pantoprazole": {
+    "generic_name": "pantoprazole",
+    "ingredients": [
+      "pantoprazole"
+    ],
+    "drug_class": "Proton Pump Inhibitor (PPI)",
+    "default_unit": "mg",
+    "common_strengths": [
+      20,
+      40
+    ],
+    "brands": [
+      "pantocid",
+      "pan",
+      "pantodac",
+      "protonix",
+      "pantocar",
+      "pan-40"
+    ]
+  },
+  "omeprazole": {
+    "generic_name": "omeprazole",
+    "ingredients": [
+      "omeprazole"
+    ],
+    "drug_class": "Proton Pump Inhibitor (PPI)",
+    "default_unit": "mg",
+    "common_strengths": [
+      20,
+      40
+    ],
+    "brands": [
+      "omez",
+      "prilosec",
+      "omizac",
+      "locid",
+      "ometa"
+    ]
+  },
+  "rabeprazole": {
+    "generic_name": "rabeprazole",
+    "ingredients": [
+      "rabeprazole"
+    ],
+    "drug_class": "Proton Pump Inhibitor (PPI)",
+    "default_unit": "mg",
+    "common_strengths": [
+      20
+    ],
+    "brands": [
+      "rabeloc",
+      "aciphex",
+      "happi",
+      "rabicip",
+      "veloz"
+    ]
+  },
+  "levothyroxine": {
+    "generic_name": "levothyroxine",
+    "ingredients": [
+      "levothyroxine"
+    ],
+    "drug_class": "Thyroid Hormone",
+    "default_unit": "mcg",
+    "common_strengths": [
+      25,
+      50,
+      75,
+      88,
+      100,
+      125
+    ],
+    "brands": [
+      "thyronorm",
+      "eltroxin",
+      "synthroid",
+      "levoxyl",
+      "thyroup"
+    ]
+  },
+  "amoxicillin": {
+    "generic_name": "amoxicillin",
+    "ingredients": [
+      "amoxicillin"
+    ],
+    "drug_class": "Antibiotic (Penicillin)",
+    "default_unit": "mg",
+    "common_strengths": [
+      250,
+      500
+    ],
+    "brands": [
+      "mox",
+      "novamox",
+      "amoxil",
+      "almox"
+    ]
+  },
+  "amoxicillin + clavulanic acid": {
+    "generic_name": "amoxicillin + clavulanic acid",
+    "ingredients": [
+      "amoxicillin",
+      "clavulanic acid"
+    ],
+    "drug_class": "Antibiotic (Penicillin + Beta-Lactamase Inhibitor)",
+    "default_unit": "mg",
+    "common_strengths": [
+      375,
+      625,
+      1000
+    ],
+    "brands": [
+      "augmentin",
+      "amoxyclav",
+      "moxikind-cv",
+      "clamox",
+      "moxclav",
+      "clavum"
+    ]
+  },
+  "azithromycin": {
+    "generic_name": "azithromycin",
+    "ingredients": [
+      "azithromycin"
+    ],
+    "drug_class": "Antibiotic (Macrolide)",
+    "default_unit": "mg",
+    "common_strengths": [
+      250,
+      500
+    ],
+    "brands": [
+      "azithral",
+      "zithromax",
+      "azee",
+      "aziwok",
+      "zady"
+    ]
+  },
+  "ibuprofen": {
+    "generic_name": "ibuprofen",
+    "ingredients": [
+      "ibuprofen"
+    ],
+    "drug_class": "NSAID",
+    "default_unit": "mg",
+    "common_strengths": [
+      200,
+      400
+    ],
+    "brands": [
+      "brufen",
+      "advil",
+      "motrin",
+      "ibugesic"
+    ]
+  },
+  "ibuprofen + paracetamol": {
+    "generic_name": "ibuprofen + paracetamol",
+    "ingredients": [
+      "ibuprofen",
+      "paracetamol"
+    ],
+    "drug_class": "Analgesic Combination",
+    "default_unit": "mg",
+    "common_strengths": [
+      400,
+      325
+    ],
+    "brands": [
+      "combiflam",
+      "flexon",
+      "ibugesic plus"
+    ]
+  },
+  "tramadol": {
+    "generic_name": "tramadol",
+    "ingredients": [
+      "tramadol"
+    ],
+    "drug_class": "Opioid Analgesic",
+    "default_unit": "mg",
+    "common_strengths": [
+      50,
+      100
+    ],
+    "brands": [
+      "ultram",
+      "tramazac",
+      "domadol",
+      "tramacip"
+    ]
+  },
+  "bisoprolol": {
+    "generic_name": "bisoprolol",
+    "ingredients": [
+      "bisoprolol"
+    ],
+    "drug_class": "Beta Blocker",
+    "default_unit": "mg",
+    "common_strengths": [
+      2.5,
+      5,
+      10
+    ],
+    "brands": [
+      "concor",
+      "zebeta",
+      "corbis",
+      "bisoheart"
+    ]
+  },
+  "carvedilol": {
+    "generic_name": "carvedilol",
+    "ingredients": [
+      "carvedilol"
+    ],
+    "drug_class": "Beta Blocker",
+    "default_unit": "mg",
+    "common_strengths": [
+      3.125,
+      6.25,
+      12.5,
+      25
+    ],
+    "brands": [
+      "cardivas",
+      "coreg",
+      "carvil",
+      "carca"
+    ]
+  },
+  "furosemide": {
+    "generic_name": "furosemide",
+    "ingredients": [
+      "furosemide"
+    ],
+    "drug_class": "Loop Diuretic",
+    "default_unit": "mg",
+    "common_strengths": [
+      20,
+      40
+    ],
+    "brands": [
+      "lasix",
+      "frusol",
+      "salurin"
+    ]
+  },
+  "spironolactone": {
+    "generic_name": "spironolactone",
+    "ingredients": [
+      "spironolactone"
+    ],
+    "drug_class": "Potassium-Sparing Diuretic / Aldosterone Antagonist",
+    "default_unit": "mg",
+    "common_strengths": [
+      25,
+      50
+    ],
+    "brands": [
+      "aldactone",
+      "alda",
+      "lacton"
+    ]
+  },
+  "losartan": {
+    "generic_name": "losartan",
+    "ingredients": [
+      "losartan"
+    ],
+    "drug_class": "Antihypertensive (ARB)",
+    "default_unit": "mg",
+    "common_strengths": [
+      25,
+      50
+    ],
+    "brands": [
+      "losacar",
+      "cozaar",
+      "repace",
+      "losium"
+    ]
+  },
+  "enalapril": {
+    "generic_name": "enalapril",
+    "ingredients": [
+      "enalapril"
+    ],
+    "drug_class": "Antihypertensive (ACE Inhibitor)",
+    "default_unit": "mg",
+    "common_strengths": [
+      2.5,
+      5,
+      10
+    ],
+    "brands": [
+      "envas",
+      "vasotec",
+      "nuril"
+    ]
+  },
+  "warfarin": {
+    "generic_name": "warfarin",
+    "ingredients": [
+      "warfarin"
+    ],
+    "drug_class": "Anticoagulant (Vitamin K Antagonist)",
+    "default_unit": "mg",
+    "common_strengths": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "brands": [
+      "coumadin",
+      "warfdac",
+      "uniwarfin"
+    ]
+  },
+  "ciprofloxacin": {
+    "generic_name": "ciprofloxacin",
+    "ingredients": [
+      "ciprofloxacin"
+    ],
+    "drug_class": "Antibiotic (Fluoroquinolone)",
+    "default_unit": "mg",
+    "common_strengths": [
+      250,
+      500
+    ],
+    "brands": [
+      "cifran",
+      "cipro",
+      "ciplox"
+    ]
+  },
+  "montelukast": {
+    "generic_name": "montelukast",
+    "ingredients": [
+      "montelukast"
+    ],
+    "drug_class": "Leukotriene Receptor Antagonist",
+    "default_unit": "mg",
+    "common_strengths": [
+      10
+    ],
+    "brands": [
+      "montek",
+      "singulair",
+      "montair"
+    ]
+  },
+  "levocetirizine": {
+    "generic_name": "levocetirizine",
+    "ingredients": [
+      "levocetirizine"
+    ],
+    "drug_class": "Antihistamine",
+    "default_unit": "mg",
+    "common_strengths": [
+      5
+    ],
+    "brands": [
+      "levocet",
+      "xyzal",
+      "teczine",
+      "1-alm"
+    ]
+  },
+  "alprazolam": {
+    "generic_name": "alprazolam",
+    "ingredients": [
+      "alprazolam"
+    ],
+    "drug_class": "Benzodiazepine (Sedative)",
+    "default_unit": "mg",
+    "common_strengths": [
+      0.25,
+      0.5
+    ],
+    "brands": [
+      "alprax",
+      "xanax",
+      "restyl",
+      "trika"
+    ]
+  },
+  "zolpidem": {
+    "generic_name": "zolpidem",
+    "ingredients": [
+      "zolpidem"
+    ],
+    "drug_class": "Sedative / Hypnotic",
+    "default_unit": "mg",
+    "common_strengths": [
+      5,
+      10
+    ],
+    "brands": [
+      "ambien",
+      "nitrest",
+      "zolfresh"
+    ]
+  }
+}

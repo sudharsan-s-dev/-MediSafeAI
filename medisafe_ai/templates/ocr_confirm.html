@@ -1,0 +1,372 @@
+﻿{% extends "base.html" %}
+{% block title %}Module 4 — Prescription OCR{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+  <!-- Decision Support Banner -->
+  <div class="alert alert-warning d-flex align-items-center mb-3 py-2" role="alert">
+    <i class="bi bi-shield-exclamation fs-5 me-2"></i>
+    <strong>Decision Support Only — MediSafe AI never replaces a physician or pharmacist.</strong>
+  </div>
+
+  <h2 class="mb-1"><span class="badge bg-primary me-2">4</span>Prescription OCR &amp; Confirmation</h2>
+  <p class="text-muted mb-3">Upload a prescription image or choose a sample. Review and edit extracted fields before sending to safety and reconciliation modules.</p>
+
+  {% if not tesseract_available %}
+  <div class="alert alert-info d-flex align-items-center py-2 mb-3">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <span><strong>Demo Mode Active:</strong> Tesseract OCR binary is not installed. Select a sample prescription below to run a pre-defined extraction demo.</span>
+  </div>
+  {% endif %}
+
+  <!-- ══════════════════ TOP ROW — Upload + Samples ══════════════════ -->
+  <div class="row g-3 mb-4">
+
+    <!-- Upload card -->
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light fw-semibold"><i class="bi bi-upload me-1"></i> Upload Prescription Image</div>
+        <div class="card-body">
+          <form id="uploadForm" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="prescriptionFile" class="form-label">Select image (PNG, JPG, JPEG, TIFF, BMP)</label>
+              <input class="form-control" type="file" id="prescriptionFile" name="file"
+                     accept=".png,.jpg,.jpeg,.tiff,.tif,.bmp" {% if not tesseract_available %}disabled{% endif %}>
+              {% if not tesseract_available %}
+              <div class="form-text text-warning">Upload disabled — Tesseract not installed. Use sample below.</div>
+              {% endif %}
+            </div>
+            <button type="button" id="btnExtract" class="btn btn-primary"
+                    {% if not tesseract_available %}disabled{% endif %}>
+              <i class="bi bi-cpu me-1"></i> Extract &amp; Analyse
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sample prescriptions card -->
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light fw-semibold"><i class="bi bi-file-earmark-medical me-1"></i> Sample Prescriptions</div>
+        <div class="card-body">
+          <p class="text-muted small mb-3">Click a sample to load a pre-defined clinical scenario (works without Tesseract).</p>
+          {% for sample in samples %}
+          <div class="d-flex align-items-start mb-2 p-2 border rounded sample-card" style="cursor:pointer;"
+               data-sample-id="{{ sample.id }}" data-sample-label="{{ sample.label }}">
+            <img src="{{ url_for('static', filename='') }}../data/sample_prescriptions/{{ sample.filename }}"
+                 class="border rounded me-3" style="width:80px;height:60px;object-fit:cover;"
+                 onerror="this.src='{{ url_for('static', filename='uploads/') }}'">
+            <div>
+              <div class="fw-semibold small">{{ sample.label }}</div>
+              <div class="text-muted" style="font-size:0.78rem;">{{ sample.description }}</div>
+              {% if sample.high_risk %}<span class="badge bg-danger mt-1">High Risk DDI</span>{% endif %}
+              <span class="badge bg-secondary mt-1">{{ sample.medicines_count }} medicines</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MAIN SPLIT PANEL (shown after extraction) ══════════════════ -->
+  <div id="ocrResultPanel" class="d-none">
+    <hr>
+    <h5 class="mb-3"><i class="bi bi-check2-square me-1 text-success"></i> OCR Result — Review &amp; Edit</h5>
+
+    <div class="row g-3">
+
+      <!-- LEFT: Prescription image preview -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-light fw-semibold d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-image me-1"></i> Prescription Image</span>
+          </div>
+          <div class="card-body text-center p-2">
+            <img id="prescriptionPreview" src="" alt="Prescription" class="img-fluid rounded border"
+                 style="max-height:420px; object-fit:contain;">
+          </div>
+          <div class="card-footer bg-light p-2">
+            <div class="small text-muted mb-1"><strong>Raw OCR lines:</strong></div>
+            <div id="rawLinesBox" class="font-monospace small bg-dark text-light p-2 rounded"
+                 style="max-height:160px;overflow-y:auto;white-space:pre-wrap;font-size:0.72rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Editable extraction table -->
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center fw-semibold">
+            <span><i class="bi bi-table me-1"></i> Extracted Medicines — Editable</span>
+            <span id="ocrModeTag" class="badge bg-info text-dark">Demo</span>
+          </div>
+          <div class="card-body p-2">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle" id="medicineTable">
+                <thead class="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Brand / Drug</th>
+                    <th>Generic</th>
+                    <th>Strength</th>
+                    <th>Frequency</th>
+                    <th>Timing</th>
+                    <th>Duration</th>
+                    <th>Conf.</th>
+                    <th><i class="bi bi-trash"></i></th>
+                  </tr>
+                </thead>
+                <tbody id="medicineTableBody"></tbody>
+              </table>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary me-2" id="btnAddRow">
+              <i class="bi bi-plus-circle me-1"></i> Add Row
+            </button>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="card shadow-sm mt-3">
+          <div class="card-header bg-light fw-semibold"><i class="bi bi-send me-1"></i> Send Confirmed Medicines To:</div>
+          <div class="card-body d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-primary" id="btnSendModule1">
+              <i class="bi bi-arrow-right-circle me-1"></i> Module 1: Reconcile
+            </button>
+            <button class="btn btn-outline-danger" id="btnSendModule2">
+              <i class="bi bi-arrow-right-circle me-1"></i> Module 2: Safety Check
+            </button>
+            <button class="btn btn-outline-success" id="btnSendModule3">
+              <i class="bi bi-arrow-right-circle me-1"></i> Module 3: Schedule
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading spinner -->
+  <div id="loadingSpinner" class="d-none text-center py-5">
+    <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
+    <div class="mt-3 text-muted">Analysing prescription image…</div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ─── Brand list for autocomplete ───────────────────────────────────────────
+const BRAND_CATALOG = {{ brand_catalog_json | safe }};
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let currentResult = null;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function confBadge(score) {
+  if (score >= 0.85) return `<span class="badge bg-success">${Math.round(score*100)}%</span>`;
+  if (score >= 0.70) return `<span class="badge bg-warning text-dark">${Math.round(score*100)}%</span>`;
+  return `<span class="badge bg-danger">${Math.round(score*100)}%</span>`;
+}
+
+function buildAutocompleteInput(name, value, cls) {
+  const id = `ac_${name}_${Math.random().toString(36).slice(2,7)}`;
+  return `<input type="text" id="${id}" name="${name}" class="form-control form-control-sm ${cls||''}"
+          value="${value}" list="${id}_dl" style="min-width:110px;">
+          <datalist id="${id}_dl">
+            ${BRAND_CATALOG.map(b=>`<option value="${b}">`).join('')}
+          </datalist>`;
+}
+
+function buildRow(med, idx) {
+  const reviewFlag = med.requires_review
+    ? `<i class="bi bi-exclamation-triangle-fill text-warning ms-1" title="Needs review"></i>`
+    : '';
+  return `<tr data-idx="${idx}" class="${med.requires_review ? 'table-warning' : ''}">
+    <td class="text-muted small">${idx+1} ${reviewFlag}</td>
+    <td>${buildAutocompleteInput('brand', med.extracted_brand, '')}</td>
+    <td><input type="text" name="generic" class="form-control form-control-sm" value="${med.extracted_generic}" style="min-width:100px;"></td>
+    <td>
+      <div class="input-group input-group-sm" style="min-width:100px;">
+        <input type="text" name="strength" class="form-control form-control-sm" value="${med.strength}" style="width:55px;">
+        <input type="text" name="unit" class="form-control form-control-sm" value="${med.unit}" style="width:50px;">
+      </div>
+    </td>
+    <td><input type="text" name="frequency" class="form-control form-control-sm" value="${med.frequency}" style="min-width:110px;"></td>
+    <td><input type="text" name="timing" class="form-control form-control-sm" value="${med.timing}" style="min-width:90px;"></td>
+    <td><input type="text" name="duration" class="form-control form-control-sm" value="${med.duration}" style="min-width:80px;"></td>
+    <td>${confBadge(med.confidence_score)}</td>
+    <td><button class="btn btn-sm btn-outline-danger btn-del-row" data-idx="${idx}">
+      <i class="bi bi-trash"></i></button></td>
+  </tr>`;
+}
+
+function renderTable(medicines) {
+  const tbody = document.getElementById('medicineTableBody');
+  tbody.innerHTML = medicines.map((m,i) => buildRow(m,i)).join('');
+  tbody.querySelectorAll('.btn-del-row').forEach(btn => {
+    btn.addEventListener('click', function() {
+      this.closest('tr').remove();
+      renumberRows();
+    });
+  });
+}
+
+function renumberRows() {
+  document.querySelectorAll('#medicineTableBody tr').forEach((tr, i) => {
+    tr.dataset.idx = i;
+    tr.querySelector('td:first-child').textContent = i + 1;
+    tr.querySelector('.btn-del-row').dataset.idx = i;
+  });
+}
+
+function collectMedicines() {
+  const rows = document.querySelectorAll('#medicineTableBody tr');
+  return Array.from(rows).map(row => ({
+    medicine_name: row.querySelector('[name="brand"]')?.value || '',
+    generic_name: row.querySelector('[name="generic"]')?.value || '',
+    strength: row.querySelector('[name="strength"]')?.value || '',
+    unit: row.querySelector('[name="unit"]')?.value || '',
+    frequency: row.querySelector('[name="frequency"]')?.value || '',
+    timing: row.querySelector('[name="timing"]')?.value || '',
+    duration: row.querySelector('[name="duration"]')?.value || '',
+  }));
+}
+
+function showResult(data) {
+  currentResult = data;
+  document.getElementById('ocrResultPanel').classList.remove('d-none');
+  document.getElementById('loadingSpinner').classList.add('d-none');
+
+  // Image preview
+  const preview = document.getElementById('prescriptionPreview');
+  if (data.image_url) {
+    preview.src = data.image_url;
+  } else if (data.image_path) {
+    // For sample images, use the static route
+    preview.src = `/ocr/image?path=${encodeURIComponent(data.image_path)}`;
+  }
+
+  // Mode badge
+  const modeTag = document.getElementById('ocrModeTag');
+  modeTag.textContent = data.ocr_mode === 'demo' ? 'Demo Mode' : 'Live OCR';
+  modeTag.className = data.ocr_mode === 'demo' ? 'badge bg-info text-dark' : 'badge bg-success';
+
+  // Raw lines
+  const rawBox = document.getElementById('rawLinesBox');
+  rawBox.textContent = (data.raw_lines || []).join('\n');
+
+  // Medicines table
+  renderTable(data.medicines || []);
+}
+
+function showLoading() {
+  document.getElementById('loadingSpinner').classList.remove('d-none');
+  document.getElementById('ocrResultPanel').classList.add('d-none');
+}
+
+// ─── Sample click ───────────────────────────────────────────────────────────
+document.querySelectorAll('.sample-card').forEach(card => {
+  card.addEventListener('click', function() {
+    const sampleId = this.dataset.sampleId;
+    showLoading();
+    fetch('/api/ocr/sample', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({sample_id: sampleId}),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) showResult(data);
+      else alert('Error: ' + (data.error || 'Unknown error'));
+      document.getElementById('loadingSpinner').classList.add('d-none');
+    })
+    .catch(err => {
+      alert('Request failed: ' + err);
+      document.getElementById('loadingSpinner').classList.add('d-none');
+    });
+  });
+});
+
+// ─── Upload + extract ────────────────────────────────────────────────────────
+document.getElementById('btnExtract').addEventListener('click', function() {
+  const fileInput = document.getElementById('prescriptionFile');
+  if (!fileInput.files.length) {
+    alert('Please select an image file first.');
+    return;
+  }
+  showLoading();
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  fetch('/api/ocr/extract', {method: 'POST', body: formData})
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) showResult(data);
+    else alert('Error: ' + (data.error || 'Unknown error'));
+    document.getElementById('loadingSpinner').classList.add('d-none');
+  })
+  .catch(err => {
+    alert('Request failed: ' + err);
+    document.getElementById('loadingSpinner').classList.add('d-none');
+  });
+});
+
+// ─── Add empty row ──────────────────────────────────────────────────────────
+document.getElementById('btnAddRow').addEventListener('click', function() {
+  const tbody = document.getElementById('medicineTableBody');
+  const idx = tbody.rows.length;
+  const emptyMed = {
+    extracted_brand:'', extracted_generic:'', drug_class:'',
+    strength:'', unit:'mg', frequency:'', frequency_label:'',
+    timing:'', duration:'', confidence_score: 0, requires_review: true
+  };
+  tbody.insertAdjacentHTML('beforeend', buildRow(emptyMed, idx));
+  tbody.querySelectorAll('.btn-del-row').forEach(btn => {
+    btn.onclick = function() { this.closest('tr').remove(); renumberRows(); };
+  });
+});
+
+// ─── Send to modules ─────────────────────────────────────────────────────────
+function sendToModule(url, label) {
+  const meds = collectMedicines();
+  if (!meds.length) { alert('No medicines to send.'); return; }
+
+  // Build a nice text representation
+  const medText = meds.map(m => {
+    let line = m.medicine_name;
+    if (m.strength) line += ` ${m.strength}${m.unit}`;
+    if (m.frequency) line += ` ${m.frequency}`;
+    if (m.timing)    line += ` ${m.timing}`;
+    if (m.duration)  line += ` x ${m.duration}`;
+    return line;
+  }).join('\n');
+
+  // Navigate to the target module with pre-filled data via POST form
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = url;
+  form.style.display = 'none';
+
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'prescription_text';
+  input.value = medText;
+  form.appendChild(input);
+
+  const inputJson = document.createElement('input');
+  inputJson.type = 'hidden';
+  inputJson.name = 'medicines_json';
+  inputJson.value = JSON.stringify(meds);
+  form.appendChild(inputJson);
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
+document.getElementById('btnSendModule1').addEventListener('click', () => sendToModule('/reconcile', 'Reconciliation'));
+document.getElementById('btnSendModule2').addEventListener('click', () => sendToModule('/safety', 'Safety Check'));
+document.getElementById('btnSendModule3').addEventListener('click', () => sendToModule('/schedule', 'Scheduler'));
+</script>
+{% endblock %}

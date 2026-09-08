@@ -1,0 +1,521 @@
+﻿{% extends "base.html" %}
+{% block title %}Module 5 — Patient Safety Report{% endblock %}
+
+{% block head %}
+<style>
+/* ── Print styles ────────────────────────────────────────── */
+@media print {
+  .no-print, nav, .disclaimer-banner, .navbar, footer { display: none !important; }
+  body { background: white !important; font-size: 11pt; }
+  .card { border: 1px solid #ccc !important; box-shadow: none !important; break-inside: avoid; }
+  .print-only { display: block !important; }
+  .container, .container-fluid { max-width: 100% !important; padding: 0 !important; }
+  a { text-decoration: none; color: inherit; }
+}
+.print-only { display: none; }
+
+/* ── Risk gauge ───────────────────────────────────────────── */
+.risk-gauge {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-size: 1.8rem; font-weight: 800;
+  border: 6px solid;
+}
+.risk-gauge.danger { border-color: #dc3545; color: #dc3545; background: #fff5f5; }
+.risk-gauge.warning { border-color: #ffc107; color: #856404; background: #fffbf0; }
+.risk-gauge.info    { border-color: #0dcaf0; color: #0c5460; background: #f0fdff; }
+.risk-gauge.success { border-color: #198754; color: #198754; background: #f0fff4; }
+
+/* ── SVG adherence bars ───────────────────────────────────── */
+.adh-bar-wrap { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.adh-bar-col  { display: flex; flex-direction: column; align-items: center; width: 36px; }
+.adh-bar      { width: 28px; border-radius: 4px 4px 0 0; transition: height 0.4s; }
+.adh-label    { font-size: 0.65rem; color: #64748b; margin-top: 2px; text-align: center; }
+.adh-val      { font-size: 0.65rem; font-weight: 600; color: #333; }
+
+/* ── Alert severity badges ────────────────────────────────── */
+.sev-CRITICAL { background: #dc3545; color: white; }
+.sev-HIGH     { background: #fd7e14; color: white; }
+.sev-MODERATE { background: #ffc107; color: #333; }
+.sev-LOW      { background: #6c757d; color: white; }
+.sev-SAFE     { background: #198754; color: white; }
+
+/* ── Reconciliation category colours ─────────────────────── */
+.cat-SAME         { background: #d1e7dd; color: #0f5132; }
+.cat-CHANGED      { background: #fff3cd; color: #664d03; }
+.cat-DISCONTINUED { background: #f8d7da; color: #842029; }
+.cat-NEW          { background: #cff4fc; color: #055160; }
+.cat-DUPLICATE    { background: #f5d0fe; color: #701a75; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+  <!-- Decision support banner -->
+  <div class="alert alert-danger border-danger d-flex align-items-center mb-3 py-2" role="alert">
+    <i class="bi bi-shield-exclamation fs-5 me-2"></i>
+    <strong>Decision Support Only — MediSafe AI never replaces a physician or pharmacist.</strong>
+  </div>
+
+  <!-- Page header -->
+  <div class="d-flex justify-content-between align-items-start mb-3 no-print">
+    <div>
+      <h2 class="mb-1"><span class="badge bg-primary me-2">5</span>Patient Safety Report Generator</h2>
+      <p class="text-muted mb-0">Aggregate safety data from all modules into a printable clinical document.</p>
+    </div>
+    {% if report %}
+    <div class="d-flex gap-2">
+      <button onclick="window.print()" class="btn btn-outline-secondary no-print">
+        <i class="bi bi-printer me-1"></i> Print / Save PDF
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ══════ INPUT FORM ══════ -->
+  {% if not report %}
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light fw-semibold"><i class="bi bi-person-badge me-1"></i> Patient Information</div>
+        <div class="card-body">
+          <form method="POST" action="/report">
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Patient Name</label>
+                <input type="text" name="patient_name" class="form-control" value="Ramaswamy K." required>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Age</label>
+                <input type="number" name="patient_age" class="form-control" value="72" min="1" max="120">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Sex</label>
+                <select name="patient_sex" class="form-select">
+                  <option value="Male" selected>Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Known Allergies</label>
+              <input type="text" name="allergies" class="form-control"
+                     value="Penicillin, Sulfa drugs" placeholder="Penicillin, Sulfa drugs, …">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Medical Conditions</label>
+              <input type="text" name="conditions" class="form-control"
+                     value="Hypertension, Type 2 Diabetes, Mild Osteoarthritis"
+                     placeholder="Hypertension, T2DM, …">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Current Medicines (one per line)</label>
+              <textarea name="medicines_input" class="form-control font-monospace" rows="8"
+                        placeholder="Tab Telma 40mg OD&#10;Tab Glycomet 500mg BD PC&#10;Tab Atorva 10mg HS">{{ medicines_text }}</textarea>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Previous Regimen (for reconciliation)</label>
+                <textarea name="old_medicines" class="form-control font-monospace" rows="4"
+                          placeholder="Tab Telma 20mg OD&#10;Tab Dolo 650 SOS">{{ old_medicines }}</textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Declared Allergies (for safety check)</label>
+                <textarea name="declared_allergies" class="form-control" rows="4"
+                          placeholder="Penicillin&#10;Sulfa drugs">{{ declared_allergies }}</textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-file-earmark-medical me-1"></i> Generate Safety Report
+            </button>
+
+            <!-- Pre-loaded cases -->
+            <div class="mt-3">
+              <div class="text-muted small mb-2">Quick-load clinical scenarios:</div>
+              <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-sm btn-outline-danger" id="btnCaseHighRisk">
+                  High-Risk Polypharmacy (Ramaswamy K.)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning" id="btnCaseModerate">
+                  Moderate-Risk Discharge Order
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info sidebar -->
+    <div class="col-lg-5">
+      <div class="card bg-light shadow-sm">
+        <div class="card-header fw-semibold"><i class="bi bi-info-circle me-1"></i> What this report includes</div>
+        <div class="card-body small">
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Patient header</strong> — name, age, allergies, conditions</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Reconciliation summary</strong> — SAME / CHANGED / NEW / DISCONTINUED / DUPLICATE table</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Safety alert panel</strong> — DDI, allergy, and geriatric dose warnings with severity rating</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Today's medication schedule</strong> — 5-slot pillbox in printable table</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>7-day adherence chart</strong> — visual bar chart of dose compliance</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Clinical recommendations</strong> — rule-based WHO-aligned guidance</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Overall risk score</strong> — composite safety gauge (0–100)</li>
+            <li><i class="bi bi-printer me-1 text-secondary"></i> Print-optimized layout with mandatory disclaimer footer</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- ══════ REPORT OUTPUT ══════ -->
+
+  <!-- Print header (only visible in print) -->
+  <div class="print-only mb-3">
+    <h2 style="color:#0d6efd;">🫀 MediSafe AI — {{ report.header.report_title }}</h2>
+    <div>Generated: {{ report.generated_at }} | Institution: {{ report.header.institution }}</div>
+    <hr>
+  </div>
+
+  <!-- ── SECTION A: Patient Header ────────────────────────────────────── -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between">
+      <span><i class="bi bi-person-fill me-1"></i> Patient Profile — {{ report.header.report_date }}</span>
+      <span class="badge bg-light text-primary">ID: {{ report.header.patient_id }}</span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-8">
+          <div class="row g-2">
+            <div class="col-sm-6">
+              <span class="text-muted small">Patient Name</span>
+              <div class="fw-bold fs-5">{{ report.header.patient_name }}</div>
+            </div>
+            <div class="col-sm-3">
+              <span class="text-muted small">Age</span>
+              <div class="fw-bold fs-5">{{ report.header.patient_age }} yrs</div>
+            </div>
+            <div class="col-sm-3">
+              <span class="text-muted small">Sex</span>
+              <div class="fw-bold fs-5">{{ report.header.patient_sex }}</div>
+            </div>
+            <div class="col-12 mt-2">
+              <span class="text-muted small">Known Allergies</span>
+              <div><span class="badge bg-danger me-1">⚠ ALLERGY</span> {{ report.header.allergies }}</div>
+            </div>
+            <div class="col-12">
+              <span class="text-muted small">Medical Conditions</span>
+              <div>{{ report.header.conditions }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 text-center">
+          <div class="risk-gauge {{ report.risk_score.color }} mx-auto">
+            <div>{{ report.risk_score.score }}</div>
+            <div style="font-size:0.7rem;font-weight:600;">/ 100</div>
+          </div>
+          <div class="mt-2 fw-semibold small text-{{ report.risk_score.color }}">
+            {{ report.risk_score.level }} RISK
+          </div>
+          <div class="text-muted" style="font-size:0.75rem;">{{ report.risk_score.label }}</div>
+        </div>
+      </div>
+      {% if report.risk_score.factors %}
+      <div class="mt-2 pt-2 border-top">
+        <span class="text-muted small">Risk Factors:</span>
+        {% for f in report.risk_score.factors %}
+        <span class="badge bg-secondary me-1 mt-1">{{ f }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── SECTION B: Safety Alerts ─────────────────────────────────────── -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header fw-bold d-flex justify-content-between align-items-center
+                {{ 'bg-danger text-white' if report.safety_panel.overall_severity == 'CRITICAL'
+                   else 'bg-warning' if report.safety_panel.overall_severity == 'HIGH'
+                   else 'bg-light' }}">
+      <span><i class="bi bi-shield-exclamation me-1"></i> Safety Alert Panel</span>
+      <span>
+        {% if report.safety_panel.critical_count > 0 %}
+        <span class="badge bg-danger me-1">{{ report.safety_panel.critical_count }} CRITICAL</span>
+        {% endif %}
+        {% if report.safety_panel.high_count > 0 %}
+        <span class="badge bg-warning text-dark me-1">{{ report.safety_panel.high_count }} HIGH</span>
+        {% endif %}
+        <span class="badge bg-secondary">{{ report.safety_panel.total_alerts }} total</span>
+      </span>
+    </div>
+    <div class="card-body p-2">
+      {% if report.safety_panel.is_safe %}
+      <div class="alert alert-success mb-0 py-2">
+        <i class="bi bi-check-circle-fill me-1"></i> No safety alerts detected. Regimen appears safe for this patient profile.
+      </div>
+      {% else %}
+      {% for alert in report.safety_panel.alerts %}
+      <div class="card mb-2 border-{{ 'danger' if alert.severity == 'CRITICAL' else 'warning' if alert.severity == 'HIGH' else 'info' }}">
+        <div class="card-body py-2 px-3">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <span class="fw-bold small">{{ alert.title }}</span>
+            <span class="badge sev-{{ alert.severity }} ms-2 text-nowrap">{{ alert.severity }}</span>
+          </div>
+          {% if alert.description %}
+          <div class="text-muted small mb-1">{{ alert.description }}</div>
+          {% endif %}
+          {% if alert.clinical_effect %}
+          <div class="small"><strong>Effect:</strong> {{ alert.clinical_effect }}</div>
+          {% endif %}
+          {% if alert.recommendation %}
+          <div class="small text-primary"><i class="bi bi-arrow-right me-1"></i>{{ alert.recommendation }}</div>
+          {% endif %}
+          <div class="text-muted mt-1" style="font-size:0.7rem;">Source: {{ alert.source }}</div>
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── SECTION C: Reconciliation Summary ────────────────────────────── -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-arrow-left-right me-1"></i> Reconciliation Summary</div>
+    <div class="card-body p-2">
+      {% if report.reconciliation_summary.available %}
+      <!-- Count badges -->
+      <div class="mb-2 d-flex flex-wrap gap-1">
+        {% for cat, cnt in report.reconciliation_summary.counts.items() %}
+        <span class="badge cat-{{ cat }} px-3 py-1">{{ cat }}: {{ cnt }}</span>
+        {% endfor %}
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Medicine</th>
+              <th>Generic</th>
+              <th>Change</th>
+              <th>Old Regimen</th>
+              <th>New Regimen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for change in report.reconciliation_summary.changes %}
+            <tr>
+              <td class="text-muted small">{{ loop.index }}</td>
+              <td class="fw-semibold small">{{ change.medicine_name or change.generic_name or '—' }}</td>
+              <td class="text-muted small">{{ change.generic_name or '—' }}</td>
+              <td>
+                <span class="badge cat-{{ change.category }} px-2">{{ change.category }}</span>
+              </td>
+              <td class="small">
+                {% if change.old_entry %}
+                {{ change.old_entry.strength }}{{ change.old_entry.unit }} {{ change.old_entry.frequency }}
+                {% else %}—{% endif %}
+              </td>
+              <td class="small">
+                {% if change.new_entry %}
+                {{ change.new_entry.strength }}{{ change.new_entry.unit }} {{ change.new_entry.frequency }}
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-secondary py-2 mb-0 small">
+        Reconciliation data not available. Run Module 1 first or enter a previous regimen.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── SECTION D: Today's Schedule ──────────────────────────────────── -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-calendar-check me-1"></i> Today's Medication Schedule — {{ report.schedule_table.target_date }}</div>
+    <div class="card-body p-2">
+      {% if report.schedule_table.available %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Time Slot</th>
+              <th>Medicine</th>
+              <th>Strength</th>
+              <th>Instructions</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for slot in report.schedule_table.slots %}
+            {% for dose in slot.doses %}
+            <tr>
+              {% if loop.index == 1 %}
+              <td class="fw-semibold" rowspan="{{ slot.count }}">
+                {{ slot.icon }} {{ slot.label }}<br>
+                <span class="text-muted small">{{ slot.time }}</span>
+              </td>
+              {% endif %}
+              <td class="fw-semibold small">{{ dose.medicine_name }}</td>
+              <td class="small">{{ dose.strength }}{{ dose.unit }}</td>
+              <td class="text-muted small">{{ dose.timing or dose.frequency }}</td>
+              <td>
+                {% if dose.course_status == 'COMPLETED' %}
+                <span class="badge bg-secondary">Course Ended</span>
+                {% elif dose.course_status == 'ACTIVE' %}
+                <span class="badge bg-success">Active Course</span>
+                {% else %}
+                <span class="badge bg-primary">Maintenance</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-secondary py-2 mb-0 small">
+        Schedule data not available. Run Module 3 to generate a daily timetable.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── SECTION E: Adherence Chart ────────────────────────────────────── -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header bg-light fw-bold d-flex justify-content-between">
+      <span><i class="bi bi-bar-chart-fill me-1"></i> 7-Day Medication Adherence</span>
+      <span>
+        <span class="badge bg-{{ 'success' if report.adherence_chart.average_rate >= 85 else 'warning' if report.adherence_chart.average_rate >= 70 else 'danger' }}">
+          Avg {{ report.adherence_chart.average_rate }}%
+        </span>
+        {% if report.adherence_chart.is_demo %}
+        <span class="badge bg-info text-dark ms-1">Demo Data</span>
+        {% endif %}
+      </span>
+    </div>
+    <div class="card-body">
+      <div class="adh-bar-wrap justify-content-center">
+        {% for day in report.adherence_chart.days %}
+        {% set bar_h = [day.rate * 0.7, 4] | max %}
+        <div class="adh-bar-col">
+          <div class="adh-val">{{ day.rate }}%</div>
+          <div class="adh-bar"
+               style="height:{{ bar_h | int }}px;
+                      background: {{ '#198754' if day.rate >= 85 else '#ffc107' if day.rate >= 70 else '#dc3545' }};">
+          </div>
+          <div class="adh-label">{{ day.date }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="text-center mt-2 text-muted small">
+        Trend: <strong>{{ report.adherence_chart.trend | title }}</strong> &nbsp;|&nbsp;
+        Total Taken: <strong>{{ report.adherence_chart.total_taken }}</strong> &nbsp;|&nbsp;
+        Total Missed: <strong>{{ report.adherence_chart.total_missed }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION F: Clinical Recommendations ───────────────────────────── -->
+  {% if report.recommendations %}
+  <div class="card shadow-sm mb-3">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-lightbulb me-1"></i> Clinical Recommendations</div>
+    <div class="card-body p-2">
+      <ol class="mb-0">
+        {% for rec in report.recommendations %}
+        <li class="mb-2">
+          <span class="badge sev-{{ rec.severity }} me-2">{{ rec.severity }}</span>
+          {{ rec.text }}
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── SECTION G: Mandatory Disclaimer ──────────────────────────────── -->
+  <div class="card border-danger mb-3">
+    <div class="card-body py-2 px-3">
+      <div class="fw-bold text-danger mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> MANDATORY DISCLAIMER</div>
+      <p class="text-muted small mb-0">{{ report.disclaimer }}</p>
+      <div class="text-muted mt-1" style="font-size:0.75rem;">
+        Generated by MediSafe AI v1.0 | {{ report.header.institution }} | {{ report.generated_at }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="d-flex gap-2 mb-4 no-print">
+    <button onclick="window.print()" class="btn btn-primary">
+      <i class="bi bi-printer me-1"></i> Print / Save as PDF
+    </button>
+    <a href="/report" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Generate New Report
+    </a>
+    <a href="/safety" class="btn btn-outline-danger">
+      <i class="bi bi-shield-check me-1"></i> Back to Safety Check
+    </a>
+  </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Quick-load scenario buttons ────────────────────────────────────────────
+const HIGH_RISK = {
+  patient_name: "Ramaswamy K.",
+  patient_age: "72",
+  patient_sex: "Male",
+  allergies: "Penicillin, Sulfa drugs",
+  conditions: "Hypertension, Type 2 Diabetes, Mild Osteoarthritis, Mild CKD",
+  medicines_input: `Tab Telma 40mg OD
+Tab Glycomet 500mg BD PC
+Tab Atorva 10mg HS
+Tab Warfarin 2mg OD
+Tab Aspirin 75mg OD PC
+Tab Ciprofloxacin 500mg BD x 7 days
+Tab Amlodipine 5mg OD`,
+  old_medicines: `Tab Telma 20mg OD
+Tab Glycomet 500mg BD
+Tab Atorva 10mg HS`,
+  declared_allergies: "Penicillin\nSulfa drugs",
+};
+
+const MODERATE_RISK = {
+  patient_name: "Kamala V.",
+  patient_age: "68",
+  patient_sex: "Female",
+  allergies: "None known",
+  conditions: "Hypothyroidism, Hypertension, Insomnia",
+  medicines_input: `Tab Thyroxine 50mcg OD empty stomach
+Tab Amlodipine 5mg OD
+Tab Zolpidem 10mg HS
+Tab Alprazolam 0.5mg HS`,
+  old_medicines: `Tab Thyroxine 50mcg OD
+Tab Amlodipine 5mg OD`,
+  declared_allergies: "",
+};
+
+function fillForm(data) {
+  for (const [key, val] of Object.entries(data)) {
+    const el = document.querySelector(`[name="${key}"]`);
+    if (el) el.value = val;
+  }
+}
+
+const btnHigh = document.getElementById('btnCaseHighRisk');
+const btnMod = document.getElementById('btnCaseModerate');
+if (btnHigh) btnHigh.addEventListener('click', () => fillForm(HIGH_RISK));
+if (btnMod)  btnMod.addEventListener('click',  () => fillForm(MODERATE_RISK));
+</script>
+{% endblock %}
